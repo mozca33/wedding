@@ -1,134 +1,142 @@
-import { useState, useCallback, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { Gift, GiftCategory, GiftPurchaseData } from '@/lib/types'
-import { useNotification } from '@/hooks/useNotification'
+// hooks/useGifts.ts
+import { useState, useEffect, useCallback } from 'react';
+import { Gift, GiftCategoryType } from '@/lib/types';
+import { initialGifts, giftCategories } from '@/lib/gifts-data';
+
+const GIFTS_STORAGE_KEY = 'wedding-gifts-state';
 
 export const useGifts = () => {
-  const [loading, setLoading] = useState(false)
-  const [categories, setCategories] = useState<GiftCategory[]>([])
-  const [gifts, setGifts] = useState<Gift[]>([])
-  const { showNotification } = useNotification()
+	const [gifts, setGifts] = useState<Gift[]>([]);
+	const [isLoaded, setIsLoaded] = useState(false);
+	const [loading, setLoading] = useState(false);
 
-  // Buscar categorias
-  const fetchCategories = useCallback(async () => {
-    try {
-      setLoading(true)
-      const { data, error } = await supabase
-        .from('gift_categories')
-        .select('*')
-        .order('name')
+	// Carregar estado dos presentes do localStorage (ou usar inicial)
+	useEffect(() => {
+		setLoading(true);
+		const savedGifts = localStorage.getItem(GIFTS_STORAGE_KEY);
+		if (savedGifts) {
+			try {
+				setGifts(JSON.parse(savedGifts));
+			} catch {
+				setGifts(initialGifts);
+			}
+		} else {
+			setGifts(initialGifts);
+		}
+		setIsLoaded(true);
+		setLoading(false);
+	}, []);
 
-      if (error) throw error
-      setCategories(data || [])
-    } catch (error) {
-      console.error('Erro ao buscar categorias:', error)
-      showNotification('Erro ao carregar categorias', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }, [showNotification])
+	// Salvar estado no localStorage
+	useEffect(() => {
+		if (isLoaded) {
+			localStorage.setItem(GIFTS_STORAGE_KEY, JSON.stringify(gifts));
+		}
+	}, [gifts, isLoaded]);
 
-  // Buscar presentes por categoria
-  const fetchGiftsByCategory = useCallback(async (categoryId?: string) => {
-    try {
-      setLoading(true)
-      let query = supabase
-        .from('gifts')
-        .select(`
-          *,
-          category:gift_categories(*)
-        `)
-        .order('priority')
-        .order('name')
+	// Reservar um presente (adicionar ao carrinho)
+	const reserveGift = useCallback((giftId: string, quantity: number = 1) => {
+		setGifts((prev) =>
+			prev.map((gift) => {
+				if (gift.id === giftId) {
+					const available = gift.quantity - gift.reserved - gift.sold;
+					if (available >= quantity) {
+						return { ...gift, reserved: gift.reserved + quantity };
+					}
+				}
+				return gift;
+			})
+		);
+	}, []);
 
-      if (categoryId) {
-        query = query.eq('category_id', categoryId)
-      }
+	// Liberar reserva (remover do carrinho)
+	const releaseReservation = useCallback((giftId: string, quantity: number = 1) => {
+		setGifts((prev) =>
+			prev.map((gift) => {
+				if (gift.id === giftId && gift.reserved >= quantity) {
+					return { ...gift, reserved: gift.reserved - quantity };
+				}
+				return gift;
+			})
+		);
+	}, []);
 
-      const { data, error } = await query
+	// Confirmar venda (após pagamento confirmado)
+	const confirmSale = useCallback((giftId: string, quantity: number = 1) => {
+		setGifts((prev) =>
+			prev.map((gift) => {
+				if (gift.id === giftId) {
+					return {
+						...gift,
+						reserved: Math.max(0, gift.reserved - quantity),
+						sold: gift.sold + quantity,
+					};
+				}
+				return gift;
+			})
+		);
+	}, []);
 
-      if (error) throw error
-      setGifts(data || [])
-    } catch (error) {
-      console.error('Erro ao buscar presentes:', error)
-      showNotification('Erro ao carregar presentes', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }, [showNotification])
+	// Verificar disponibilidade
+	const getAvailableQuantity = useCallback(
+		(giftId: string): number => {
+			const gift = gifts.find((g) => g.id === giftId);
+			if (!gift) return 0;
+			return gift.quantity - gift.reserved - gift.sold;
+		},
+		[gifts]
+	);
 
-  // Marcar presente como comprado
-  const purchaseGift = useCallback(async (purchaseData: GiftPurchaseData) => {
-    try {
-      setLoading(true)
+	// Obter presentes por categoria
+	const getGiftsByCategory = useCallback(
+		(category: GiftCategoryType): Gift[] => {
+			return gifts.filter((g) => g.category === category);
+		},
+		[gifts]
+	);
 
-      const { data, error } = await supabase
-        .from('gifts')
-        .update({
-          is_purchased: true,
-          purchased_by: purchaseData.buyer_name.trim(),
-          purchased_at: new Date().toISOString()
-        })
-        .eq('id', purchaseData.gift_id)
-        .select()
+	// Obter presente por ID
+	const getGiftById = useCallback(
+		(giftId: string): Gift | undefined => {
+			return gifts.find((g) => g.id === giftId);
+		},
+		[gifts]
+	);
 
-      if (error) throw error
+	// Estatísticas
+	const getGiftStats = useCallback(() => {
+		const total = gifts.reduce((sum, g) => sum + g.quantity, 0);
+		const sold = gifts.reduce((sum, g) => sum + g.sold, 0);
+		const reserved = gifts.reduce((sum, g) => sum + g.reserved, 0);
+		const available = total - sold - reserved;
 
-      // Atualizar estado local
-      setGifts(prev => prev.map(gift => 
-        gift.id === purchaseData.gift_id 
-          ? { 
-              ...gift, 
-              is_purchased: true, 
-              purchased_by: purchaseData.buyer_name.trim(),
-              purchased_at: new Date().toISOString()
-            }
-          : gift
-      ))
+		return {
+			total,
+			sold,
+			reserved,
+			available,
+			percentage: total > 0 ? Math.round((sold / total) * 100) : 0,
+		};
+	}, [gifts]);
 
-      showNotification('Presente marcado como comprado! 🎁', 'success')
-      return true
+	// Resetar para estado inicial (útil para desenvolvimento)
+	const resetGifts = useCallback(() => {
+		setGifts(initialGifts);
+		localStorage.removeItem(GIFTS_STORAGE_KEY);
+	}, []);
 
-    } catch (error) {
-      console.error('Erro ao marcar presente como comprado:', error)
-      showNotification('Erro ao marcar presente. Tente novamente.', 'error')
-      return false
-    } finally {
-      setLoading(false)
-    }
-  }, [showNotification])
-
-  // Estatísticas
-  const getGiftStats = useCallback(() => {
-    const total = gifts.length
-    const purchased = gifts.filter(g => g.is_purchased).length
-    const available = total - purchased
-    const totalValue = gifts.reduce((sum, gift) => sum + (gift.price || 0), 0)
-    const purchasedValue = gifts
-      .filter(g => g.is_purchased)
-      .reduce((sum, gift) => sum + (gift.price || 0), 0)
-
-    return {
-      total,
-      purchased,
-      available,
-      totalValue,
-      purchasedValue,
-      percentage: total > 0 ? Math.round((purchased / total) * 100) : 0
-    }
-  }, [gifts])
-
-  useEffect(() => {
-    fetchCategories()
-  }, [fetchCategories])
-
-  return {
-    loading,
-    categories,
-    gifts,
-    fetchCategories,
-    fetchGiftsByCategory,
-    purchaseGift,
-    getGiftStats
-  }
-}
+	return {
+		gifts,
+		categories: giftCategories,
+		isLoaded,
+		loading,
+		reserveGift,
+		releaseReservation,
+		confirmSale,
+		getAvailableQuantity,
+		getGiftsByCategory,
+		getGiftById,
+		getGiftStats,
+		resetGifts,
+	};
+};

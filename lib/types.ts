@@ -68,33 +68,52 @@ export interface RSVPRow {
 	confirmed: boolean;
 }
 
+// Categorias de presentes
+export type GiftCategoryType = 'cozinha' | 'banheiro' | 'limpeza' | 'cama-banho';
+
 export interface GiftCategory {
-	id: string;
+	id: GiftCategoryType;
 	name: string;
-	description?: string;
 	icon: string;
-	color: string;
-	created_at: string;
 }
 
+// Presente individual
 export interface Gift {
 	id: string;
-	category_id: string;
+	category: GiftCategoryType;
 	name: string;
-	description?: string;
 	price: number;
-	image_url?: string;
-	store_link?: string;
-	is_purchased: boolean;
-	purchased_by?: string;
-	purchased_at?: string;
-	priority: 1 | 2 | 3;
-	created_at: string;
-	updated_at: string;
-	category?: GiftCategory;
+	quantity: number;
+	image: string;
+	reserved: number; // quantidade reservada no carrinho (pendente)
+	sold: number; // quantidade vendida (confirmada)
+}
+
+// Item no carrinho
+export interface CartItem {
+	giftId: string;
+	name: string;
+	price: number;
+	quantity: number;
+	image: string;
+}
+
+// Pedido de compra
+export interface GiftOrder {
+	id: string;
+	items: CartItem[];
+	total: number;
+	buyerName: string;
+	buyerEmail: string;
+	buyerPhone?: string;
+	status: 'pending' | 'confirmed' | 'cancelled';
+	createdAt: string;
+	confirmedAt?: string;
 }
 
 export interface GiftPurchaseData {
-	gift_id: string;
-	buyer_name: string;
+	items: CartItem[];
+	buyerName: string;
+	buyerEmail: string;
+	buyerPhone?: string;
 }

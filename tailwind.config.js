@@ -35,8 +35,7 @@ module.exports = {
       },
       fontFamily: {
         script: ['Cormorant Garamond', 'serif'],
-        sans: ['EB Garamond', 'serif'],
-        serif: ['EB Garamond', 'serif'],
+        sans: ['Nunito', 'sans-serif'],
       },
       animation: {
         'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
