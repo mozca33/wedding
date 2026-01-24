@@ -1,0 +1,87 @@
+/* styles/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Reset básico */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+}
+
+/* Classes customizadas usando Tailwind */
+@layer components {
+  .container-custom {
+    @apply max-w-6xl mx-auto px-4 md:px-8;
+  }
+  
+  .section-padding {
+    @apply py-20 md:py-24;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+  }
+  
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 inline-flex items-center justify-center;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
+  }
+  
+  .textarea-field {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 resize-none;
+  }
+  
+  .gradient-bg {
+    background: linear-gradient(135deg, #fdf2f8 0%, #f0f9ff 100%);
+  }
+  
+  .text-gradient {
+    background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #06b6d4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* Animações customizadas */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-600 { animation-delay: 600ms; }
+.animation-delay-800 { animation-delay: 800ms; }
+
+.maps-location {
+  display: flex;
+  justify-content: center;
+}
