@@ -3,7 +3,7 @@ import { Heart, Instagram, MessageSquare } from 'lucide-react';
 export const Footer = () => {
 	const currentYear = new Date().getFullYear();
 
-	const whatsappNumber = process.env.MY_WHATSAPP_NUMBER?.replace(/[^0-9]/g, '') || '';
+	const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '';
 
 	const socialLinks = [
 		{
