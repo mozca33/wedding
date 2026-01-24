@@ -37,13 +37,16 @@ export const Header = () => {
   return (
     <header className={cn(
       'fixed top-0 w-full z-40 transition-all duration-300',
-      isScrolled 
-        ? 'bg-white/95 backdrop-blur-md shadow-lg' 
+      isScrolled
+        ? 'bg-white/95 backdrop-blur-md shadow-lg'
         : 'bg-transparent'
     )}>
       <div className="container-custom">
         <div className="flex items-center justify-between h-16 md:h-20">
-          <Link href="/" className="font-script text-2xl md:text-3xl font-bold text-primary-600">
+          <Link href="/" className={cn(
+            "font-script text-2xl md:text-3xl font-bold transition-colors duration-300",
+            isScrolled ? "text-primary-600" : "text-white drop-shadow-md"
+          )}>
             J & R
           </Link>
 
@@ -52,7 +55,12 @@ export const Header = () => {
               <button
                 key={item.name}
                 onClick={() => scrollToSection(item.href)}
-                className="text-gray-700 hover:text-primary-600 transition-colors duration-300 font-medium"
+                className={cn(
+                  "transition-colors duration-300 font-medium",
+                  isScrolled
+                    ? "text-gray-700 hover:text-primary-600"
+                    : "text-white/90 hover:text-white drop-shadow-sm"
+                )}
               >
                 {item.name}
               </button>
@@ -61,7 +69,12 @@ export const Header = () => {
 
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 text-gray-700 hover:text-primary-600 transition-colors"
+            className={cn(
+              "md:hidden p-2 transition-colors",
+              isScrolled
+                ? "text-gray-700 hover:text-primary-600"
+                : "text-white hover:text-white/80"
+            )}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>

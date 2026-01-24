@@ -14,4 +14,3 @@ const eslintConfig = [
 ];
 
 export default eslintConfig;
-"@ | Out-File -FilePath "eslint.config.mjs" -Encoding UTF8;

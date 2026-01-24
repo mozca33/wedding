@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run build:*)",
+      "Bash(timeout 15 npm run dev)"
+    ]
+  }
+}

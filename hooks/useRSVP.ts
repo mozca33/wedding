@@ -1,95 +1,106 @@
 // hooks/useRSVP.ts
-import { useState, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
-import { RSVPData, RSVPRow } from '@/lib/types'
-import { useNotification } from './useNotification'
-import { sendRSVPNotification } from '@/lib/whatsapp'
+import { useState, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+import { RSVPData, RSVPRow } from '@/lib/types';
+import { useNotification } from './useNotification';
 
 export const useRSVP = () => {
-  const [loading, setLoading] = useState(false)
-  const [rsvpList, setRsvpList] = useState<RSVPData[]>([])
-  const { showNotification } = useNotification()
+	const [loading, setLoading] = useState(false);
+	const [rsvpList, setRsvpList] = useState<RSVPData[]>([]);
+	const { showNotification } = useNotification();
 
-  const fetchRSVPList = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('rsvp')
-        .select('*')
-        .eq('confirmed', true)
-        .order('created_at', { ascending: false })
+	const fetchRSVPList = useCallback(async () => {
+		try {
+			const { data, error } = await supabase.from('rsvp').select('*').eq('confirmed', true).order('created_at', { ascending: false });
 
-      if (error) throw error
+			if (error) throw error;
 
-      const formattedData: RSVPData[] = (data as RSVPRow[]).map(item => ({
-        id: item.id,
-        name: item.name,
-        email: item.email,
-        phone: item.phone || undefined,
-        guestsCount: item.guests_count,
-        guestNames: item.guest_names || undefined,
-        dietaryRestrictions: item.dietary_restrictions || undefined,
-        message: item.message || undefined,
-        confirmed: item.confirmed
-      }))
+			const formattedData: RSVPData[] = (data as RSVPRow[]).map((item) => ({
+				id: item.id,
+				name: item.name,
+				email: item.email,
+				phone: item.phone || undefined,
+				message: item.message || undefined,
+				confirmed: item.confirmed,
+			}));
 
-      setRsvpList(formattedData)
-    } catch (error) {
-      console.error('Error fetching RSVP list:', error)
-      showNotification('Erro ao carregar lista de confirmados.', 'error')
-    }
-  }, [showNotification])
+			setRsvpList(formattedData);
+		} catch (error) {
+			console.error('Error fetching RSVP list:', error);
+			showNotification('Erro ao carregar lista de confirmados.', 'error');
+		}
+	}, [showNotification]);
 
-  const submitRSVP = useCallback(async (data: RSVPData) => {
-    setLoading(true)
-    try {
-      const { error } = await supabase
-        .from('rsvp')
-        .insert({
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          guests_count: data.guestsCount,
-          guest_names: data.guestNames,
-          dietary_restrictions: data.dietaryRestrictions,
-          message: data.message,
-          confirmed: true
-        })
+	const submitRSVP = useCallback(
+		async (data: RSVPData) => {
+			setLoading(true);
+			try {
+				// Verificar se já existe cadastro com mesmo email
+				const { data: existingByEmail } = await supabase.from('rsvp').select('id').eq('email', data.email).limit(1);
 
-      if (error) throw error
+				if (existingByEmail && existingByEmail.length > 0) {
+					showNotification('Este email já foi utilizado para confirmar presença.', 'error');
+					setLoading(false);
+					return { success: false, error: 'Email já cadastrado' };
+				}
 
-      // Enviar notificação via WhatsApp
-      sendRSVPNotification({
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        guestsCount: data.guestsCount,
-        guestNames: data.guestNames,
-        dietaryRestrictions: data.dietaryRestrictions,
-        message: data.message
-      })
+				// Verificar se já existe cadastro com mesmo telefone (se fornecido)
+				if (data.phone) {
+					const { data: existingByPhone } = await supabase.from('rsvp').select('id').eq('phone', data.phone).limit(1);
 
-      showNotification('Presença confirmada com sucesso! 🎉', 'success')
-      await fetchRSVPList()
-      
-      return { success: true }
-    } catch (error) {
-      console.error('Error submitting RSVP:', error)
-      showNotification('Erro ao confirmar presença. Tente novamente.', 'error')
-      return { success: false, error }
-    } finally {
-      setLoading(false)
-    }
-  }, [fetchRSVPList, showNotification])
+					if (existingByPhone && existingByPhone.length > 0) {
+						showNotification('Este telefone já foi utilizado para confirmar presença.', 'error');
+						setLoading(false);
+						return { success: false, error: 'Telefone já cadastrado' };
+					}
+				}
 
-  const getTotalGuests = useCallback(() => {
-    return rsvpList.reduce((total, rsvp) => total + rsvp.guestsCount + 1, 0)
-  }, [rsvpList])
+				const { error }: { error: unknown } = await supabase.from('rsvp').insert({
+					name: data.name,
+					email: data.email,
+					phone: data.phone,
+					message: data.message,
+					confirmed: true,
+				});
 
-  return {
-    loading,
-    rsvpList,
-    submitRSVP,
-    fetchRSVPList,
-    getTotalGuests
-  }
-}
+				if (error) throw error;
+
+				// Enviar notificação automática via WhatsApp (API)
+				try {
+					await fetch('/api/notify-whatsapp', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							name: data.name,
+							email: data.email,
+							phone: data.phone,
+							message: data.message,
+						}),
+					});
+				} catch (notifyError: unknown) {
+					// Não bloqueia o RSVP se a notificação falhar
+					console.error('Erro ao enviar notificação WhatsApp:', notifyError);
+				}
+
+				showNotification('Presença confirmada com sucesso! 🎉', 'success');
+				await fetchRSVPList();
+
+				return { success: true };
+			} catch (error: unknown) {
+				console.error('Error submitting RSVP:', error);
+				showNotification('Erro ao confirmar presença. Tente novamente.', 'error');
+				return { success: false, error };
+			} finally {
+				setLoading(false);
+			}
+		},
+		[fetchRSVPList, showNotification]
+	);
+
+	return {
+		loading,
+		rsvpList,
+		submitRSVP,
+		fetchRSVPList,
+	};
+};
