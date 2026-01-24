@@ -38,6 +38,8 @@ export const Contact = () => {
 		}
 	};
 
+	const whatsappNumber = process.env.MY_WHATSAPP_NUMBER?.replace(/[^0-9]/g, '') || '';
+
 	const contactInfo = [
 		{
 			icon: Mail,
@@ -48,8 +50,8 @@ export const Contact = () => {
 		{
 			icon: Phone,
 			label: 'Telefone',
-			value: process.env.NEXT_PUBLIC_PHONE_FORMATTED || '(00) 00000-0000',
-			href: `tel:+${process.env.NEXT_PUBLIC_PHONE_WHATSAPP || ''}`,
+			value: whatsappNumber ? `+${whatsappNumber}` : '(00) 00000-0000',
+			href: `https://wa.me/${whatsappNumber}`,
 		},
 		{
 			icon: MapPin,
@@ -60,8 +62,8 @@ export const Contact = () => {
 		{
 			icon: Instagram,
 			label: 'Instagram',
-			value: process.env.NEXT_PUBLIC_INSTAGRAM || '@instagram',
-			href: `https://instagram.com/${process.env.NEXT_PUBLIC_INSTAGRAM_USERNAME || 'username'}`,
+			value: `@${process.env.NEXT_PUBLIC_INSTAGRAM_USERNAME || 'username'}`,
+			href: `https://instagram.com/${process.env.NEXT_PUBLIC_INSTAGRAM_USERNAME || ''}`,
 		},
 	];
 

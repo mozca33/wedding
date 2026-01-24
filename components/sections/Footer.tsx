@@ -1,7 +1,9 @@
-import { Heart, Instagram, Facebook, MessageSquare } from 'lucide-react';
+import { Heart, Instagram, MessageSquare } from 'lucide-react';
 
 export const Footer = () => {
 	const currentYear = new Date().getFullYear();
+
+	const whatsappNumber = process.env.MY_WHATSAPP_NUMBER?.replace(/[^0-9]/g, '') || '';
 
 	const socialLinks = [
 		{
@@ -11,7 +13,7 @@ export const Footer = () => {
 		},
 		{
 			icon: MessageSquare,
-			href: `https://wa.me/${process.env.NEXT_PUBLIC_PHONE_WHATSAPP || ''}`,
+			href: `https://wa.me/${whatsappNumber}`,
 			label: 'WhatsApp',
 		},
 	];
@@ -82,7 +84,11 @@ export const Footer = () => {
 						</div>
 						<div className="text-gray-400 text-sm">
 							<p>{process.env.NEXT_PUBLIC_EMAIL || 'email@example.com'}</p>
-							<p>{process.env.NEXT_PUBLIC_PHONE_FORMATTED || '(00) 00000-0000'}</p>
+							<p>
+								<a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+									+{whatsappNumber}
+								</a>
+							</p>
 						</div>
 					</div>
 				</div>
