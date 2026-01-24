@@ -6,7 +6,7 @@ interface ContactMessage {
 }
 
 export const sendContactMessage = (data: ContactMessage) => {
-	const phoneNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '';
+	const phoneNumber = process.env.NEXT_PUBLIC_PHONE_WHATSAPP || '';
 	const message = `Nova mensagem do site de casamento:\n\nNome: ${data.name}\nE-mail: ${data.email}\nMensagem: ${data.message}`;
 	const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 

@@ -42,14 +42,14 @@ export const Contact = () => {
 		{
 			icon: Mail,
 			label: 'E-mail',
-			value: 'rafaelfelipe501@gmail.com',
-			href: 'mailto:rafaelfelipe501@gmail.com',
+			value: process.env.NEXT_PUBLIC_EMAIL || 'email@example.com',
+			href: `mailto:${process.env.NEXT_PUBLIC_EMAIL || 'email@example.com'}`,
 		},
 		{
 			icon: Phone,
 			label: 'Telefone',
-			value: '(62) 99477-6888',
-			href: 'tel:+5562994776888',
+			value: process.env.NEXT_PUBLIC_PHONE_FORMATTED || '(00) 00000-0000',
+			href: `tel:+${process.env.NEXT_PUBLIC_PHONE_WHATSAPP || ''}`,
 		},
 		{
 			icon: MapPin,
@@ -60,8 +60,8 @@ export const Contact = () => {
 		{
 			icon: Instagram,
 			label: 'Instagram',
-			value: '@rafaelf.c',
-			href: 'https://instagram.com/rafaelf.c',
+			value: process.env.NEXT_PUBLIC_INSTAGRAM || '@instagram',
+			href: `https://instagram.com/${process.env.NEXT_PUBLIC_INSTAGRAM_USERNAME || 'username'}`,
 		},
 	];
 

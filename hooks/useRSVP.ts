@@ -11,9 +11,22 @@ export const useRSVP = () => {
 
 	const fetchRSVPList = useCallback(async () => {
 		try {
-			const { data, error } = await supabase.from('rsvp').select('*').eq('confirmed', true).order('created_at', { ascending: false });
+			console.log('🔍 Buscando lista de RSVP...');
+
+			const { data, error } = await supabase
+				.from('rsvp')
+				.select('*')
+				.order('created_at', { ascending: false });
+
+			console.log('📊 Resultado da query:', { data, error });
 
 			if (error) throw error;
+
+			if (!data || data.length === 0) {
+				console.log('⚠️ Nenhum dado retornado');
+				setRsvpList([]);
+				return;
+			}
 
 			const formattedData: RSVPData[] = (data as RSVPRow[]).map((item) => ({
 				id: item.id,
@@ -24,9 +37,10 @@ export const useRSVP = () => {
 				confirmed: item.confirmed,
 			}));
 
+			console.log('✅ Lista formatada:', formattedData);
 			setRsvpList(formattedData);
 		} catch (error) {
-			console.error('Error fetching RSVP list:', error);
+			console.error('❌ Error fetching RSVP list:', error);
 			showNotification('Erro ao carregar lista de confirmados.', 'error');
 		}
 	}, [showNotification]);
