@@ -104,6 +104,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 			transactionAmount: total,
 		});
 
+		// Check if PIX generation was successful
+		if ('error' in pixPayload) {
+			console.error('PIX generation error:', pixPayload.error);
+			return res.status(500).json({ error: 'Failed to generate PIX code' });
+		}
+
 		const pixCode = pixPayload.toBRCode();
 
 		// Generate QR Code as base64 image
