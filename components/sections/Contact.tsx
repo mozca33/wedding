@@ -33,35 +33,37 @@ export const Contact = () => {
 	];
 
 	return (
-		<section id="contact" className="section-padding gradient-bg">
+		<section id="contact" className="section-padding bg-cream-100">
 			<div className="container-custom">
 				<div className="text-center mb-16">
-					<h2 className="font-script text-4xl md:text-5xl font-bold text-gradient mb-4">Entre em Contato</h2>
-					<p className="text-lg text-gray-600 max-w-2xl mx-auto">
+					<p className="text-sm tracking-[0.3em] uppercase text-neutral-500 mb-4">Fale Conosco</p>
+					<h2 className="font-script text-4xl md:text-5xl text-primary-500 mb-4">Entre em Contato</h2>
+					<div className="w-24 h-px bg-primary-500 mx-auto mb-6" />
+					<p className="text-neutral-600 max-w-2xl mx-auto">
 						Tem alguma dúvida sobre o casamento? Entre em contato conosco! Ficaremos felizes em ajudar.
 					</p>
 				</div>
 
 				<div className="max-w-2xl mx-auto space-y-8">
 					{/* Contact Info */}
-					<div className="card">
-						<h3 className="text-2xl font-semibold mb-6 text-gray-900 text-center">Informações de Contato</h3>
+					<div className="bg-white border border-neutral-200 p-8">
+						<h3 className="text-xl font-medium mb-8 text-primary-500 text-center tracking-wide">Informações de Contato</h3>
 
 						<div className="space-y-6">
 							{contactInfo.map((info, index) => {
 								const Icon = info.icon;
 								return (
 									<div key={info.label} className="flex items-center space-x-4 animate-fade-in-up" style={{ animationDelay: `${index * 200}ms` }}>
-										<div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center flex-shrink-0">
-											<Icon className="w-6 h-6 text-white" />
+										<div className="w-12 h-12 border border-primary-500 flex items-center justify-center flex-shrink-0">
+											<Icon className="w-5 h-5 text-primary-500" />
 										</div>
 										<div>
-											<p className="font-medium text-gray-900">{info.label}</p>
+											<p className="font-medium text-primary-500 text-sm tracking-wider">{info.label}</p>
 											<a
 												href={info.href}
 												target="_blank"
 												rel="noopener noreferrer"
-												className="text-primary-600 hover:text-primary-700 transition-colors"
+												className="text-neutral-600 hover:text-primary-500 transition-colors"
 											>
 												{info.value}
 											</a>
@@ -73,13 +75,13 @@ export const Contact = () => {
 					</div>
 
 					{/* Wedding Info Card */}
-					<div className="card bg-gradient-to-br from-primary-50 to-secondary-50 border-primary-200">
-						<h3 className="text-xl font-semibold mb-4 text-gray-900 text-center">Lembrete Importante</h3>
-						<p className="text-gray-700 leading-relaxed text-center">
+					<div className="bg-white border border-neutral-200 p-8">
+						<h3 className="text-lg font-medium mb-4 text-primary-500 text-center tracking-wide">Lembrete Importante</h3>
+						<p className="text-neutral-600 leading-relaxed text-center">
 							Para confirmar sua presença, não esqueça de preencher o formulário. Isso nos ajuda muito no planejamento do dia!
 						</p>
 						<div className="text-center">
-							<Button onClick={() => document.getElementById('rsvp')?.scrollIntoView({ behavior: 'smooth' })} variant="outline" className="mt-4">
+							<Button onClick={() => document.getElementById('rsvp')?.scrollIntoView({ behavior: 'smooth' })} variant="outline" className="mt-6">
 								Confirmar Presença
 							</Button>
 						</div>

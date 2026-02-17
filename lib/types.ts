@@ -69,7 +69,7 @@ export interface RSVPRow {
 }
 
 // Categorias de presentes
-export type GiftCategoryType = 'cozinha' | 'banheiro' | 'limpeza' | 'cama-banho';
+export type GiftCategoryType = 'cozinha' | 'limpeza' | 'cama-e-banho' | 'para-a-vida-de-casados';
 
 export interface GiftCategory {
 	id: GiftCategoryType;

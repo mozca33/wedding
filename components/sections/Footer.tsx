@@ -1,4 +1,4 @@
-import { Heart, Instagram, MessageSquare } from 'lucide-react';
+import { Instagram, MessageSquare } from 'lucide-react';
 
 export const Footer = () => {
 	const currentYear = new Date().getFullYear();
@@ -20,7 +20,7 @@ export const Footer = () => {
 
 	const quickLinks = [
 		{ name: 'Início', href: '#home' },
-		{ name: 'RSVP', href: '#rsvp' },
+		{ name: 'Confirmar Presença', href: '#rsvp' },
 		{ name: 'Presentes', href: '#gifts' },
 		{ name: 'Galeria', href: '#gallery' },
 		{ name: 'Contato', href: '#contact' },
@@ -34,28 +34,29 @@ export const Footer = () => {
 	};
 
 	return (
-		<footer className="bg-gray-900 text-white">
-			<div className="container-custom py-12">
-				<div className="grid md:grid-cols-3 gap-8 mb-8">
+		<footer className="bg-primary-500 text-cream-100">
+			<div className="container-custom py-16">
+				<div className="grid md:grid-cols-3 gap-12 mb-12">
 					{/* Logo and Description */}
 					<div className="text-center md:text-left">
-						<div className="flex items-center justify-center md:justify-start mb-4">
-							<Heart className="w-6 h-6 text-red-500 mr-2" />
+						<div className="flex items-center justify-center md:justify-start mb-6">
 							<span className="font-script text-3xl">Julia & Rafael</span>
-							<Heart className="w-6 h-6 text-red-500 ml-2" />
 						</div>
-						<p className="text-gray-400 leading-relaxed">
-							Celebrando nosso amor e compartilhando nossa alegria com vocês. Obrigado por fazer parte da nossa história!
+						<p className="text-cream-300 leading-relaxed text-sm">
+							Celebrando nosso amor e compartilhando nossa alegria com vocês. Obrigado por fazer parte da nossa história.
 						</p>
 					</div>
 
 					{/* Quick Links */}
 					<div className="text-center">
-						<h3 className="text-lg font-semibold mb-4">Links Rápidos</h3>
-						<ul className="space-y-2">
+						<h3 className="text-sm font-medium mb-6 tracking-widest uppercase">Links Rápidos</h3>
+						<ul className="space-y-3">
 							{quickLinks.map((link) => (
 								<li key={link.name}>
-									<button onClick={() => scrollToSection(link.href)} className="text-gray-400 hover:text-white transition-colors duration-300">
+									<button
+										onClick={() => scrollToSection(link.href)}
+										className="text-cream-300 hover:text-cream-100 transition-colors duration-300 text-sm tracking-wider"
+									>
 										{link.name}
 									</button>
 								</li>
@@ -65,8 +66,8 @@ export const Footer = () => {
 
 					{/* Contact and Social */}
 					<div className="text-center md:text-right">
-						<h3 className="text-lg font-semibold mb-4">Nos Acompanhe</h3>
-						<div className="flex justify-center md:justify-end space-x-4 mb-4">
+						<h3 className="text-sm font-medium mb-6 tracking-widest uppercase">Nos Acompanhe</h3>
+						<div className="flex justify-center md:justify-end space-x-4 mb-6">
 							{socialLinks.map((social) => {
 								const Icon = social.icon;
 								return (
@@ -74,7 +75,7 @@ export const Footer = () => {
 										key={social.label}
 										href={social.href}
 										rel="noopener noreferrer"
-										className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary-600 transition-all duration-300 transform hover:scale-110"
+										className="w-10 h-10 border border-cream-400 flex items-center justify-center text-cream-300 hover:text-cream-100 hover:border-cream-100 transition-all duration-300"
 										title={social.label}
 									>
 										<Icon className="w-5 h-5" />
@@ -82,10 +83,15 @@ export const Footer = () => {
 								);
 							})}
 						</div>
-						<div className="text-gray-400 text-sm">
+						<div className="text-cream-300 text-sm space-y-1">
 							<p>{process.env.NEXT_PUBLIC_EMAIL || 'email@example.com'}</p>
 							<p>
-								<a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+								<a
+									href={`https://wa.me/${whatsappNumber}`}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="hover:text-cream-100 transition-colors"
+								>
 									+{whatsappNumber}
 								</a>
 							</p>
@@ -93,17 +99,17 @@ export const Footer = () => {
 					</div>
 				</div>
 
+				{/* Divider */}
+				<div className="w-full h-px bg-cream-800 mb-8" />
+
 				{/* Bottom Bar */}
-				<div className="border-t border-gray-800 pt-8 text-center">
+				<div className="text-center">
 					<div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-						<p className="text-gray-400 text-sm">&copy; {currentYear} Julia & Rafael. Todos os direitos reservados.</p>
-						<p className="text-gray-400 text-sm">Feito com 💕 para nosso dia especial</p>
+						<p className="text-cream-400 text-xs tracking-wider">&copy; {currentYear} Julia & Rafael</p>
+						<p className="text-cream-400 text-xs tracking-wider">25 de Julho de 2026</p>
 					</div>
 				</div>
 			</div>
-
-			{/* Decorative Element */}
-			<div className="h-1 bg-gradient-to-r from-primary-500 via-secondary-500 to-primary-500"></div>
 		</footer>
 	);
 };

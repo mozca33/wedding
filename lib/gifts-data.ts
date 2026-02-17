@@ -1,132 +1,130 @@
 // lib/gifts-data.ts
-// Dados dos presentes - será substituído pelos dados da planilha
+// Dados dos presentes - buscados do Supabase
+import { supabase } from './supabase';
 import { Gift, GiftCategory, GiftCategoryType } from './types';
 
 export const giftCategories: GiftCategory[] = [
 	{ id: 'cozinha', name: 'Cozinha', icon: '🍳' },
-	{ id: 'banheiro', name: 'Banheiro', icon: '🚿' },
 	{ id: 'limpeza', name: 'Limpeza', icon: '🧹' },
-	{ id: 'cama-banho', name: 'Cama e Banho', icon: '🛏️' },
+	{ id: 'cama-e-banho', name: 'Cama e Banho', icon: '🛏️' },
+	{ id: 'para-a-vida-de-casados', name: 'Para a vida de casados', icon: '💑' },
 ];
 
-// Produtos de exemplo - substituir pelos dados reais da planilha
-export const initialGifts: Gift[] = [
-	// Cozinha
-	{
-		id: 'coz-001',
-		category: 'cozinha',
-		name: 'Jogo de Panelas Antiaderente',
-		price: 299.90,
-		quantity: 1,
-		image: '/images/gifts/placeholder.jpg',
-		reserved: 0,
-		sold: 0,
-	},
-	{
-		id: 'coz-002',
-		category: 'cozinha',
-		name: 'Liquidificador',
-		price: 189.90,
-		quantity: 1,
-		image: '/images/gifts/placeholder.jpg',
-		reserved: 0,
-		sold: 0,
-	},
-	{
-		id: 'coz-003',
-		category: 'cozinha',
-		name: 'Air Fryer',
-		price: 449.90,
-		quantity: 1,
-		image: '/images/gifts/placeholder.jpg',
-		reserved: 0,
-		sold: 0,
-	},
-	{
-		id: 'coz-004',
-		category: 'cozinha',
-		name: 'Jogo de Talheres 24 peças',
-		price: 129.90,
-		quantity: 2,
-		image: '/images/gifts/placeholder.jpg',
-		reserved: 0,
-		sold: 0,
-	},
-	// Banheiro
-	{
-		id: 'ban-001',
-		category: 'banheiro',
-		name: 'Jogo de Toalhas',
-		price: 89.90,
-		quantity: 3,
-		image: '/images/gifts/placeholder.jpg',
-		reserved: 0,
-		sold: 0,
-	},
-	{
-		id: 'ban-002',
-		category: 'banheiro',
-		name: 'Organizador de Banheiro',
-		price: 59.90,
-		quantity: 2,
-		image: '/images/gifts/placeholder.jpg',
-		reserved: 0,
-		sold: 0,
-	},
-	// Limpeza
-	{
-		id: 'lim-001',
-		category: 'limpeza',
-		name: 'Aspirador de Pó',
-		price: 349.90,
-		quantity: 1,
-		image: '/images/gifts/placeholder.jpg',
-		reserved: 0,
-		sold: 0,
-	},
-	{
-		id: 'lim-002',
-		category: 'limpeza',
-		name: 'Vassoura Elétrica',
-		price: 199.90,
-		quantity: 1,
-		image: '/images/gifts/placeholder.jpg',
-		reserved: 0,
-		sold: 0,
-	},
-	// Cama e Banho
-	{
-		id: 'cab-001',
-		category: 'cama-banho',
-		name: 'Jogo de Cama Queen',
-		price: 199.90,
-		quantity: 2,
-		image: '/images/gifts/placeholder.jpg',
-		reserved: 0,
-		sold: 0,
-	},
-	{
-		id: 'cab-002',
-		category: 'cama-banho',
-		name: 'Edredom',
-		price: 249.90,
-		quantity: 1,
-		image: '/images/gifts/placeholder.jpg',
-		reserved: 0,
-		sold: 0,
-	},
-	{
-		id: 'cab-003',
-		category: 'cama-banho',
-		name: 'Travesseiro de Plumas',
-		price: 129.90,
-		quantity: 4,
-		image: '/images/gifts/placeholder.jpg',
-		reserved: 0,
-		sold: 0,
-	},
-];
+// Buscar todos os presentes do Supabase
+export const fetchGifts = async (): Promise<Gift[]> => {
+	const { data, error } = await supabase
+		.from('gifts')
+		.select('*')
+		.order('category')
+		.order('name');
 
+	if (error) {
+		console.error('Erro ao buscar presentes:', error);
+		return [];
+	}
+
+	return data.map((gift) => ({
+		id: gift.id,
+		category: gift.category as GiftCategoryType,
+		name: gift.name,
+		price: parseFloat(gift.price),
+		quantity: gift.quantity,
+		image: gift.image,
+		reserved: gift.reserved,
+		sold: gift.sold,
+	}));
+};
+
+// Buscar presentes por categoria
+export const fetchGiftsByCategory = async (category: GiftCategoryType): Promise<Gift[]> => {
+	const { data, error } = await supabase
+		.from('gifts')
+		.select('*')
+		.eq('category', category)
+		.order('name');
+
+	if (error) {
+		console.error('Erro ao buscar presentes por categoria:', error);
+		return [];
+	}
+
+	return data.map((gift) => ({
+		id: gift.id,
+		category: gift.category as GiftCategoryType,
+		name: gift.name,
+		price: parseFloat(gift.price),
+		quantity: gift.quantity,
+		image: gift.image,
+		reserved: gift.reserved,
+		sold: gift.sold,
+	}));
+};
+
+// Buscar um presente específico por ID
+export const fetchGiftById = async (id: string): Promise<Gift | null> => {
+	const { data, error } = await supabase
+		.from('gifts')
+		.select('*')
+		.eq('id', id)
+		.single();
+
+	if (error) {
+		console.error('Erro ao buscar presente:', error);
+		return null;
+	}
+
+	return {
+		id: data.id,
+		category: data.category as GiftCategoryType,
+		name: data.name,
+		price: parseFloat(data.price),
+		quantity: data.quantity,
+		image: data.image,
+		reserved: data.reserved,
+		sold: data.sold,
+	};
+};
+
+// Atualizar quantidade reservada de um presente
+export const updateGiftReserved = async (id: string, reserved: number): Promise<boolean> => {
+	const { error } = await supabase
+		.from('gifts')
+		.update({ reserved })
+		.eq('id', id);
+
+	if (error) {
+		console.error('Erro ao atualizar reserva:', error);
+		return false;
+	}
+
+	return true;
+};
+
+// Atualizar quantidade vendida de um presente
+export const updateGiftSold = async (id: string, sold: number): Promise<boolean> => {
+	const { error } = await supabase
+		.from('gifts')
+		.update({ sold })
+		.eq('id', id);
+
+	if (error) {
+		console.error('Erro ao atualizar vendas:', error);
+		return false;
+	}
+
+	return true;
+};
+
+// Verificar disponibilidade de um presente
+export const checkGiftAvailability = async (id: string, requestedQty: number): Promise<boolean> => {
+	const gift = await fetchGiftById(id);
+	if (!gift) return false;
+
+	const available = gift.quantity - gift.reserved - gift.sold;
+	return available >= requestedQty;
+};
+
+// Helpers para categorias
 export const getCategoryName = (categoryId: GiftCategoryType): string => {
 	const category = giftCategories.find((c) => c.id === categoryId);
 	return category?.name || categoryId;

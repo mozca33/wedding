@@ -1,41 +1,71 @@
 // hooks/useGifts.ts
 import { useState, useEffect, useCallback } from 'react';
 import { Gift, GiftCategoryType } from '@/lib/types';
-import { initialGifts, giftCategories } from '@/lib/gifts-data';
-
-const GIFTS_STORAGE_KEY = 'wedding-gifts-state';
+import { fetchGifts, giftCategories } from '@/lib/gifts-data';
+import { supabase } from '@/lib/supabase';
 
 export const useGifts = () => {
 	const [gifts, setGifts] = useState<Gift[]>([]);
 	const [isLoaded, setIsLoaded] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
-	// Carregar estado dos presentes do localStorage (ou usar inicial)
-	useEffect(() => {
+	// Carregar presentes do Supabase
+	const loadGifts = useCallback(async () => {
 		setLoading(true);
-		const savedGifts = localStorage.getItem(GIFTS_STORAGE_KEY);
-		if (savedGifts) {
-			try {
-				setGifts(JSON.parse(savedGifts));
-			} catch {
-				setGifts(initialGifts);
-			}
-		} else {
-			setGifts(initialGifts);
+		setError(null);
+		try {
+			const data = await fetchGifts();
+			setGifts(data);
+			setIsLoaded(true);
+		} catch (err) {
+			console.error('Erro ao carregar presentes:', err);
+			setError('Erro ao carregar presentes');
+		} finally {
+			setLoading(false);
 		}
-		setIsLoaded(true);
-		setLoading(false);
 	}, []);
 
-	// Salvar estado no localStorage
+	// Carregar ao montar o componente
 	useEffect(() => {
-		if (isLoaded) {
-			localStorage.setItem(GIFTS_STORAGE_KEY, JSON.stringify(gifts));
-		}
-	}, [gifts, isLoaded]);
+		loadGifts();
+	}, [loadGifts]);
+
+	// Escutar mudanças em tempo real no Supabase
+	useEffect(() => {
+		const channel = supabase
+			.channel('gifts-changes')
+			.on(
+				'postgres_changes',
+				{ event: '*', schema: 'public', table: 'gifts' },
+				(payload) => {
+					if (payload.eventType === 'UPDATE') {
+						const updated = payload.new as any;
+						setGifts((prev) =>
+							prev.map((gift) =>
+								gift.id === updated.id
+									? {
+											...gift,
+											reserved: updated.reserved,
+											sold: updated.sold,
+											quantity: updated.quantity,
+									  }
+									: gift
+							)
+						);
+					}
+				}
+			)
+			.subscribe();
+
+		return () => {
+			supabase.removeChannel(channel);
+		};
+	}, []);
 
 	// Reservar um presente (adicionar ao carrinho)
-	const reserveGift = useCallback((giftId: string, quantity: number = 1) => {
+	const reserveGift = useCallback(async (giftId: string, quantity: number = 1) => {
+		// Atualização otimista local
 		setGifts((prev) =>
 			prev.map((gift) => {
 				if (gift.id === giftId) {
@@ -47,10 +77,26 @@ export const useGifts = () => {
 				return gift;
 			})
 		);
-	}, []);
+
+		// Atualizar no Supabase
+		const gift = gifts.find((g) => g.id === giftId);
+		if (gift) {
+			const { error } = await supabase
+				.from('gifts')
+				.update({ reserved: gift.reserved + quantity })
+				.eq('id', giftId);
+
+			if (error) {
+				console.error('Erro ao reservar presente:', error);
+				// Reverter em caso de erro
+				loadGifts();
+			}
+		}
+	}, [gifts, loadGifts]);
 
 	// Liberar reserva (remover do carrinho)
-	const releaseReservation = useCallback((giftId: string, quantity: number = 1) => {
+	const releaseReservation = useCallback(async (giftId: string, quantity: number = 1) => {
+		// Atualização otimista local
 		setGifts((prev) =>
 			prev.map((gift) => {
 				if (gift.id === giftId && gift.reserved >= quantity) {
@@ -59,10 +105,25 @@ export const useGifts = () => {
 				return gift;
 			})
 		);
-	}, []);
+
+		// Atualizar no Supabase
+		const gift = gifts.find((g) => g.id === giftId);
+		if (gift && gift.reserved >= quantity) {
+			const { error } = await supabase
+				.from('gifts')
+				.update({ reserved: Math.max(0, gift.reserved - quantity) })
+				.eq('id', giftId);
+
+			if (error) {
+				console.error('Erro ao liberar reserva:', error);
+				loadGifts();
+			}
+		}
+	}, [gifts, loadGifts]);
 
 	// Confirmar venda (após pagamento confirmado)
-	const confirmSale = useCallback((giftId: string, quantity: number = 1) => {
+	const confirmSale = useCallback(async (giftId: string, quantity: number = 1) => {
+		// Atualização otimista local
 		setGifts((prev) =>
 			prev.map((gift) => {
 				if (gift.id === giftId) {
@@ -75,7 +136,24 @@ export const useGifts = () => {
 				return gift;
 			})
 		);
-	}, []);
+
+		// Atualizar no Supabase
+		const gift = gifts.find((g) => g.id === giftId);
+		if (gift) {
+			const { error } = await supabase
+				.from('gifts')
+				.update({
+					reserved: Math.max(0, gift.reserved - quantity),
+					sold: gift.sold + quantity,
+				})
+				.eq('id', giftId);
+
+			if (error) {
+				console.error('Erro ao confirmar venda:', error);
+				loadGifts();
+			}
+		}
+	}, [gifts, loadGifts]);
 
 	// Verificar disponibilidade
 	const getAvailableQuantity = useCallback(
@@ -119,17 +197,17 @@ export const useGifts = () => {
 		};
 	}, [gifts]);
 
-	// Resetar para estado inicial (útil para desenvolvimento)
-	const resetGifts = useCallback(() => {
-		setGifts(initialGifts);
-		localStorage.removeItem(GIFTS_STORAGE_KEY);
-	}, []);
+	// Recarregar presentes do Supabase
+	const refreshGifts = useCallback(() => {
+		loadGifts();
+	}, [loadGifts]);
 
 	return {
 		gifts,
 		categories: giftCategories,
 		isLoaded,
 		loading,
+		error,
 		reserveGift,
 		releaseReservation,
 		confirmSale,
@@ -137,6 +215,6 @@ export const useGifts = () => {
 		getGiftsByCategory,
 		getGiftById,
 		getGiftStats,
-		resetGifts,
+		refreshGifts,
 	};
 };

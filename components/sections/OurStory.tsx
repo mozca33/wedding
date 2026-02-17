@@ -279,7 +279,7 @@ const StoryCard = ({ section, index, onOpenGallery }: StoryCardProps) => {
 
   return (
     <div
-      className="group relative bg-white rounded-2xl shadow-lg overflow-hidden animate-fade-in-up hover:shadow-xl transition-all duration-300 cursor-pointer"
+      className="group relative bg-white border border-neutral-200 overflow-hidden animate-fade-in-up hover:border-primary-500 transition-all duration-300 cursor-pointer"
       style={{ animationDelay: `${index * 100}ms` }}
       onClick={handleCardClick}
     >
@@ -295,8 +295,8 @@ const StoryCard = ({ section, index, onOpenGallery }: StoryCardProps) => {
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-100 to-secondary-100">
-            <Heart className="w-12 h-12 text-primary-400" />
+          <div className="w-full h-full flex items-center justify-center bg-cream-100">
+            <Heart className="w-12 h-12 text-neutral-300" />
           </div>
         )}
 
@@ -305,8 +305,8 @@ const StoryCard = ({ section, index, onOpenGallery }: StoryCardProps) => {
 
         {/* Click hint */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <span className="bg-white/90 text-gray-800 px-4 py-2 rounded-full text-sm font-medium shadow-lg">
-            Clique para abrir
+          <span className="bg-cream-100 text-primary-500 px-4 py-2 text-sm tracking-wider">
+            Ver mais
           </span>
         </div>
 
@@ -315,24 +315,24 @@ const StoryCard = ({ section, index, onOpenGallery }: StoryCardProps) => {
           <>
             <button
               onClick={goToPrevious}
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-md z-10"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-cream-100/90 hover:bg-cream-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
               aria-label="Foto anterior"
             >
-              <ChevronLeft className="w-5 h-5 text-gray-800" />
+              <ChevronLeft className="w-5 h-5 text-primary-500" />
             </button>
             <button
               onClick={goToNext}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-md z-10"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-cream-100/90 hover:bg-cream-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
               aria-label="Próxima foto"
             >
-              <ChevronRight className="w-5 h-5 text-gray-800" />
+              <ChevronRight className="w-5 h-5 text-primary-500" />
             </button>
           </>
         )}
 
         {/* Image Counter */}
         {hasMultipleImages && (
-          <div className="absolute top-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+          <div className="absolute top-3 right-3 bg-primary-500/80 text-cream-100 text-xs px-2 py-1">
             {currentImageIndex + 1} / {section.images.length}
           </div>
         )}
@@ -347,10 +347,10 @@ const StoryCard = ({ section, index, onOpenGallery }: StoryCardProps) => {
                   e.stopPropagation()
                   setCurrentImageIndex(idx)
                 }}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                className={`w-2 h-2 transition-all duration-300 ${
                   idx === currentImageIndex
-                    ? 'bg-white w-4'
-                    : 'bg-white/50 hover:bg-white/75'
+                    ? 'bg-cream-100 w-4'
+                    : 'bg-cream-100/50 hover:bg-cream-100/75'
                 }`}
                 aria-label={`Ir para foto ${idx + 1}`}
               />
@@ -361,7 +361,7 @@ const StoryCard = ({ section, index, onOpenGallery }: StoryCardProps) => {
 
       {/* Title */}
       <div className="absolute bottom-0 left-0 right-0 p-4">
-        <h3 className="text-white font-semibold text-lg leading-tight drop-shadow-lg">
+        <h3 className="text-cream-100 font-medium text-base leading-tight drop-shadow-lg tracking-wide">
           {section.title}
         </h3>
       </div>
@@ -398,13 +398,15 @@ export const OurStory = () => {
 
   return (
     <>
-      <section id="story" className="section-padding bg-gradient-to-b from-white to-primary-50">
+      <section id="story" className="section-padding bg-white">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="font-script text-4xl md:text-5xl font-bold text-gradient mb-4">
+          <div className="text-center mb-16">
+            <p className="text-sm tracking-[0.3em] uppercase text-neutral-500 mb-4">Sobre nós</p>
+            <h2 className="font-script text-4xl md:text-5xl text-primary-500 mb-4">
               Nossa História
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <div className="w-24 h-px bg-primary-500 mx-auto mb-6" />
+            <p className="text-neutral-600 max-w-2xl mx-auto">
               Cada casal tem uma história única. Esta é a nossa jornada até o altar.
             </p>
           </div>
@@ -422,13 +424,15 @@ export const OurStory = () => {
           </div>
 
           {/* Call to Action */}
-          <div className="text-center mt-16">
-            <div className="card max-w-2xl mx-auto">
-              <Heart className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold mb-4 text-gray-900">
+          <div className="text-center mt-20">
+            <div className="bg-cream-100 border border-neutral-200 p-10 max-w-2xl mx-auto">
+              <div className="w-12 h-12 border border-primary-500 flex items-center justify-center mx-auto mb-6">
+                <Heart className="w-6 h-6 text-primary-500" />
+              </div>
+              <h3 className="text-2xl font-script text-primary-500 mb-4">
                 E agora, nossa nova aventura começa!
               </h3>
-              <p className="text-gray-700 leading-relaxed">
+              <p className="text-neutral-600 leading-relaxed">
                 Queremos compartilhar este momento especial com vocês, nossas pessoas mais queridas.
                 Sua presença tornará nosso dia ainda mais especial!
               </p>
