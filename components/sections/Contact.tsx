@@ -20,6 +20,12 @@ export const Contact = () => {
 			href: `https://wa.me/${whatsappNumber}`,
 		},
 		{
+			icon: Phone,
+			label: 'Telefone (Rafael)',
+			value: '+55 62 98166-0718',
+			href: 'https://wa.me/5562981660718',
+		},
+		{
 			icon: MapPin,
 			label: 'Local da Cerimônia',
 			value: 'Recanto dos buritis, Goiânia - GO',
@@ -31,12 +37,18 @@ export const Contact = () => {
 			value: `@${process.env.NEXT_PUBLIC_INSTAGRAM_USERNAME || 'username'}`,
 			href: `https://instagram.com/${process.env.NEXT_PUBLIC_INSTAGRAM_USERNAME || ''}`,
 		},
+		{
+			icon: Instagram,
+			label: 'Instagram (Julia)',
+			value: '@olivju_',
+			href: 'https://instagram.com/olivju_',
+		},
 	];
 
 	return (
 		<section id="contact" className="section-padding relative">
 			<div className="absolute inset-0 z-0">
-				<Image src="/images/hero/tenis.jpeg" alt="Background" fill className="object-cover" />
+				<Image src="/images/hero/tenis.jpeg" alt="Background" fill className="object-cover object-center" priority />
 				<div className="absolute inset-0" />
 			</div>
 

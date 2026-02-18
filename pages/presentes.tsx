@@ -625,6 +625,11 @@ export default function PresentesPage() {
 
 				{/* Filtros por Categoria */}
 				<div className="container-custom py-8">
+					<div className="bg-white border border-primary-500 p-6 text-center mb-8 max-w-2xl mx-auto shadow-sm">
+						<p className="text-neutral-600 mb-2">Para presentear com qualquer valor, mandar para a chave pix:</p>
+						<p className="text-xl font-medium text-primary-500 font-mono select-all break-all">{process.env.NEXT_PUBLIC_PIX_KEY}</p>
+					</div>
+
 					<div className="flex flex-wrap gap-2 justify-center">
 						<button
 							onClick={() => setSelectedCategory(null)}

@@ -86,18 +86,6 @@ export const Hero = () => {
 					</button>
 				</div>
 			</div>
-
-			{/* Indicador de scroll elegante */}
-			<div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10">
-				<button
-					onClick={() => document.getElementById('info')?.scrollIntoView({ behavior: 'smooth' })}
-					className="text-white/60 hover:text-white transition-colors flex flex-col items-center"
-					aria-label="Rolar para próxima seção"
-				>
-					<span className="text-xs tracking-widest uppercase mb-2">Scroll</span>
-					<span className="w-px h-8 bg-white/60 animate-pulse" />
-				</button>
-			</div>
 		</section>
 	);
 };
