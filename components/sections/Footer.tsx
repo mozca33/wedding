@@ -66,7 +66,6 @@ export const Footer = () => {
 
 					{/* Contact and Social */}
 					<div className="text-center md:text-right">
-						<h3 className="text-sm font-medium mb-6 tracking-widest uppercase">Nos Acompanhe</h3>
 						<div className="flex justify-center md:justify-end space-x-4 mb-6">
 							{socialLinks.map((social) => {
 								const Icon = social.icon;

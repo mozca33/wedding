@@ -9,6 +9,8 @@ import { AdminLogin } from '@/components/ui/AdminLogin';
 import { MultiSelectActions } from '@/components/ui/MultiSelectActions';
 import { GalleryItem } from '@/lib/types';
 
+const WEDDING_DATE = new Date('2026-07-25T00:00:00');
+
 export const Gallery = () => {
 	// Hooks
 	const { loading, uploading, gallery, uploadPhotos, fetchGallery, deletePhoto, deleteMultiplePhotos, getTotalPhotos, getPhotosByCategory } =
@@ -16,6 +18,8 @@ export const Gallery = () => {
 
 	const { showNotification } = useNotification();
 	const { isAdmin, loginAsAdmin, logoutAdmin } = useAdminCheck();
+
+	const isBeforeWedding = new Date() < WEDDING_DATE;
 
 	// Estados locais
 	const [activeFilter, setActiveFilter] = useState<GalleryItem['category'] | 'all'>('all');
@@ -93,16 +97,17 @@ export const Gallery = () => {
 		return selectedItems.find((selected) => selected.id === item.id) !== undefined;
 	};
 
+	const showLockedMessage = useCallback(() => {
+		showNotification('Espera o dia do casamento zé', 'error');
+	}, [showNotification]);
+
 	const handleDrag = useCallback((e: React.DragEvent<HTMLDivElement>) => {
 		e.preventDefault();
 		e.stopPropagation();
 
-		console.log('🖱️ Drag event:', e.type); // Debug
-
 		if (e.type === 'dragenter' || e.type === 'dragover') {
 			setDragActive(true);
 		} else if (e.type === 'dragleave') {
-			// Verificar se realmente saiu da área
 			const rect = e.currentTarget.getBoundingClientRect();
 			const x = e.clientX;
 			const y = e.clientY;
@@ -119,8 +124,10 @@ export const Gallery = () => {
 			e.stopPropagation();
 			setDragActive(false);
 
-			console.log('📁 Drop event triggered'); // Debug
-			console.log('📁 Files dropped:', e.dataTransfer.files.length); // Debug
+			if (isBeforeWedding) {
+				showLockedMessage();
+				return;
+			}
 
 			if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
 				const validation = validateName(uploaderName);
@@ -129,17 +136,19 @@ export const Gallery = () => {
 					return;
 				}
 
-				console.log('📁 Starting upload...'); // Debug
 				await uploadPhotos(e.dataTransfer.files, selectedCategory, uploaderName.trim());
-			} else {
-				console.log('❌ No files found in drop event'); // Debug
 			}
 		},
-		[uploadPhotos, selectedCategory, uploaderName, showNotification, validateName]
+		[isBeforeWedding, showLockedMessage, uploadPhotos, selectedCategory, uploaderName, showNotification, validateName]
 	);
 
 	const handleFileInput = useCallback(
 		async (e: React.ChangeEvent<HTMLInputElement>) => {
+			if (isBeforeWedding) {
+				showLockedMessage();
+				e.target.value = '';
+				return;
+			}
 			if (e.target.files && e.target.files.length > 0) {
 				const validation = validateName(uploaderName);
 				if (!validation.isValid) {
@@ -150,7 +159,7 @@ export const Gallery = () => {
 				e.target.value = '';
 			}
 		},
-		[uploadPhotos, selectedCategory, uploaderName, showNotification]
+		[isBeforeWedding, showLockedMessage, uploadPhotos, selectedCategory, uploaderName, showNotification]
 	);
 
 	const handleDeletePhoto = useCallback(
@@ -176,6 +185,10 @@ export const Gallery = () => {
 	);
 
 	const handleUploadClick = () => {
+		if (isBeforeWedding) {
+			showLockedMessage();
+			return;
+		}
 		const validation = validateName(uploaderName);
 		if (!validation.isValid) {
 			showNotification(validation.message ? validation.message : '', 'error');
@@ -222,7 +235,13 @@ export const Gallery = () => {
 				<div className="mb-12">
 					<div
 						className={`border border-dashed p-10 text-center transition-all duration-300 ${
-							dragActive ? 'border-primary-500 bg-cream-100' : 'border-neutral-300 hover:border-primary-500 hover:bg-cream-50'
+							false
+								? dragActive
+									? 'border-red-400 bg-red-50'
+									: 'border-neutral-300 bg-neutral-50 cursor-not-allowed'
+								: dragActive
+									? 'border-primary-500 bg-cream-100'
+									: 'border-neutral-300 hover:border-primary-500 hover:bg-cream-50'
 						} ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
 						onDragEnter={handleDrag}
 						onDragLeave={handleDrag}
@@ -234,94 +253,104 @@ export const Gallery = () => {
 							setDragActive(false);
 						}}
 					>
-						{/* Nome do Usuário */}
-						<div className="mb-6">
-							<label className="text-sm font-medium text-gray-700 mb-2 flex justify-center pr-2">
-								<User className="w-4 h-4 inline mr-1" />
-								Seu nome:
-							</label>
-							<input
-								type="text"
-								value={uploaderName}
-								onChange={(e) => setUploaderName(e.target.value)}
-								placeholder="Digite seu nome"
-								className={`mx-auto px-4 py-3 border focus:ring-1 focus:ring-primary-500 focus:border-primary-500 max-w-xs transition-colors ${
-									uploaderName && !nameValidation.isValid
-										? 'border-red-400 bg-red-50'
-										: uploaderName && nameValidation.isValid
-											? 'border-primary-500 bg-cream-50'
-											: 'border-neutral-300 bg-white'
-								}`}
-								disabled={uploading}
-								maxLength={50}
-								onDragOver={(e) => e.stopPropagation()}
-								onDrop={(e) => e.stopPropagation()}
-							/>
+						{false ? (
+							<div className="py-4">
+								<Lock className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
+								<h3 className="text-lg font-medium mb-2 text-neutral-500 tracking-wide">Galeria bloqueada</h3>
+								<p className="text-neutral-400 text-sm">O upload de fotos estará disponível a partir de 25 de Julho de 2026</p>
+							</div>
+						) : (
+							<>
+								{/* Nome do Usuário */}
+								<div className="mb-6">
+									<label className="text-sm font-medium text-gray-700 mb-2 flex justify-center pr-2">
+										<User className="w-4 h-4 inline mr-1" />
+										Seu nome:
+									</label>
+									<input
+										type="text"
+										value={uploaderName}
+										onChange={(e) => setUploaderName(e.target.value)}
+										placeholder="Digite seu nome"
+										className={`mx-auto px-4 py-3 border focus:ring-1 focus:ring-primary-500 focus:border-primary-500 max-w-xs transition-colors ${
+											uploaderName && !nameValidation.isValid
+												? 'border-red-400 bg-red-50'
+												: uploaderName && nameValidation.isValid
+													? 'border-primary-500 bg-cream-50'
+													: 'border-neutral-300 bg-white'
+										}`}
+										disabled={uploading}
+										maxLength={50}
+										onDragOver={(e) => e.stopPropagation()}
+										onDrop={(e) => e.stopPropagation()}
+									/>
 
-							{/* Indicador visual do nome */}
-							{uploaderName && (
-								<div className="mt-2 text-sm">
-									{nameValidation.isValid ? (
-										<p className="text-green-600 flex items-center justify-center" />
-									) : (
-										<p className="text-red-500 flex items-center justify-center" />
+									{/* Indicador visual do nome */}
+									{uploaderName && (
+										<div className="mt-2 text-sm">
+											{nameValidation.isValid ? (
+												<p className="text-green-600 flex items-center justify-center" />
+											) : (
+												<p className="text-red-500 flex items-center justify-center" />
+											)}
+										</div>
 									)}
 								</div>
-							)}
-						</div>
 
-						{/* Category Selection */}
-						<div className="mb-6">
-							<label className="block text-sm font-medium text-gray-700 mb-2">Categoria das fotos:</label>
-							<select
-								value={selectedCategory}
-								onChange={(e) => setSelectedCategory(e.target.value as GalleryItem['category'])}
-								className="mx-auto px-4 py-3 border border-neutral-300 bg-white focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-								disabled={uploading}
-								onDragOver={(e) => e.stopPropagation()}
-								onDrop={(e) => e.stopPropagation()}
-							>
-								<option value="ceremony">Cerimônia</option>
-								<option value="reception">Recepção</option>
-								<option value="party">Festa</option>
-								<option value="other">Outras</option>
-							</select>
-						</div>
+								{/* Category Selection */}
+								<div className="mb-6">
+									<label className="block text-sm font-medium text-gray-700 mb-2">Categoria das fotos:</label>
+									<select
+										value={selectedCategory}
+										onChange={(e) => setSelectedCategory(e.target.value as GalleryItem['category'])}
+										className="mx-auto px-4 py-3 border border-neutral-300 bg-white focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+										disabled={uploading}
+										onDragOver={(e) => e.stopPropagation()}
+										onDrop={(e) => e.stopPropagation()}
+									>
+										<option value="ceremony">Cerimônia</option>
+										<option value="reception">Recepção</option>
+										<option value="party">Festa</option>
+										<option value="other">Outras</option>
+									</select>
+								</div>
 
-						{/* Input File Oculto */}
-						<input type="file" multiple accept="image/*" onChange={handleFileInput} className="hidden" id="photo-upload" disabled={uploading} />
+								{/* Input File Oculto */}
+								<input type="file" multiple accept="image/*" onChange={handleFileInput} className="hidden" id="photo-upload" disabled={uploading} />
 
-						{/* Área de Upload */}
-						<div className="cursor-pointer">
-							<div className="relative">
-								<Upload className={`w-10 h-10 text-primary-500 mx-auto mb-4 ${uploading ? 'animate-pulse' : ''}`} />
-								{uploading && (
-									<div className="absolute inset-0 flex items-center justify-center">
-										<div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+								{/* Área de Upload */}
+								<div className="cursor-pointer">
+									<div className="relative">
+										<Upload className={`w-10 h-10 text-primary-500 mx-auto mb-4 ${uploading ? 'animate-pulse' : ''}`} />
+										{uploading && (
+											<div className="absolute inset-0 flex items-center justify-center">
+												<div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+											</div>
+										)}
 									</div>
-								)}
-							</div>
-							<h3 className="text-lg font-medium mb-2 text-primary-500 tracking-wide">
-								{uploading ? 'Enviando suas fotos...' : 'Compartilhe suas fotos'}
-							</h3>
-							<p className="text-neutral-600 mb-6 text-sm">
-								{uploading ? 'Aguarde enquanto processamos suas fotos...' : 'Clique no botão abaixo ou arraste suas fotos para fazer upload'}
-							</p>
+									<h3 className="text-lg font-medium mb-2 text-primary-500 tracking-wide">
+										{uploading ? 'Enviando suas fotos...' : 'Compartilhe suas fotos'}
+									</h3>
+									<p className="text-neutral-600 mb-6 text-sm">
+										{uploading ? 'Aguarde enquanto processamos suas fotos...' : 'Clique no botão abaixo ou arraste suas fotos para fazer upload'}
+									</p>
 
-							<button
-								type="button"
-								onClick={handleUploadClick}
-								disabled={uploading || !nameValidation.isValid}
-								className={`inline-flex items-center px-6 py-3 border border-primary-500 text-primary-500 bg-white hover:bg-primary-500 hover:text-cream-100 transition-all duration-200 ${
-									uploading || !nameValidation.isValid ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-								}`}
-							>
-								<Upload className="w-4 h-4 mr-2" />
-								{uploading ? 'Enviando...' : 'Selecionar Fotos'}
-							</button>
+									<button
+										type="button"
+										onClick={handleUploadClick}
+										disabled={uploading || !nameValidation.isValid}
+										className={`inline-flex items-center px-6 py-3 border border-primary-500 text-primary-500 bg-white hover:bg-primary-500 hover:text-cream-100 transition-all duration-200 ${
+											uploading || !nameValidation.isValid ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+										}`}
+									>
+										<Upload className="w-4 h-4 mr-2" />
+										{uploading ? 'Enviando...' : 'Selecionar Fotos'}
+									</button>
 
-							{!nameValidation.isValid && uploaderName && <p className="text-red-500 flex items-center justify-center" />}
-						</div>
+									{!nameValidation.isValid && uploaderName && <p className="text-red-500 flex items-center justify-center" />}
+								</div>
+							</>
+						)}
 					</div>
 				</div>
 

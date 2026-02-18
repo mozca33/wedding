@@ -23,7 +23,7 @@ const CountdownTimer = dynamic(() => import('../CountDownTimer').then((mod) => (
 });
 
 // Caminho da foto do casal - coloque sua foto em public/images/hero/couple.jpg
-const HERO_IMAGE = '/images/hero/couple.jpg';
+const HERO_IMAGE = '/images/hero/capa.jpeg';
 
 export const Hero = () => {
 	const [imageError, setImageError] = useState(false);
