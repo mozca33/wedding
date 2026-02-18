@@ -152,7 +152,11 @@ const CartModal = ({
 												<Plus size={16} />
 											</button>
 										</div>
-										<button onClick={() => onRemoveItem(item.giftId)} className="p-2 text-red-500 hover:bg-red-50 transition-colors" title="Remover do carrinho">
+										<button
+											onClick={() => onRemoveItem(item.giftId)}
+											className="p-2 text-red-500 hover:bg-red-50 transition-colors"
+											title="Remover do carrinho"
+										>
 											<X size={20} />
 										</button>
 									</div>
@@ -204,11 +208,43 @@ const PixModal = ({
 	const [isLoading, setIsLoading] = useState(false);
 	const [pixData, setPixData] = useState<{ pixCode: string; qrCodeImage: string; orderNumber: string } | null>(null);
 
-	const handleCopyPix = () => {
-		if (pixData) {
-			navigator.clipboard.writeText(pixData.pixCode);
-			setCopied(true);
-			setTimeout(() => setCopied(false), 2000);
+	const handleCopyPix = async () => {
+		if (!pixData) return;
+
+		try {
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				await navigator.clipboard.writeText(pixData.pixCode);
+				setCopied(true);
+				setTimeout(() => setCopied(false), 2000);
+			} else {
+				throw new Error('Clipboard API not available');
+			}
+		} catch (err) {
+			// Fallback para navegadores antigos ou mobile
+			const textArea = document.createElement('textarea');
+			textArea.value = pixData.pixCode;
+
+			// Evitar scroll e visibilidade
+			textArea.style.top = '0';
+			textArea.style.left = '0';
+			textArea.style.position = 'fixed';
+			textArea.style.opacity = '0';
+
+			document.body.appendChild(textArea);
+			textArea.focus();
+			textArea.select();
+
+			try {
+				const successful = document.execCommand('copy');
+				if (successful) {
+					setCopied(true);
+					setTimeout(() => setCopied(false), 2000);
+				}
+			} catch (fallbackErr) {
+				console.error('Fallback copy error', fallbackErr);
+			}
+
+			document.body.removeChild(textArea);
 		}
 	};
 
@@ -367,7 +403,9 @@ const PixModal = ({
 									<button
 										onClick={handleCopyPix}
 										className={`p-2 transition-colors flex items-center justify-center gap-2 ${
-											copied ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-white border border-neutral-200 hover:border-primary-500 text-primary-500'
+											copied
+												? 'bg-green-100 text-green-700 border border-green-300'
+												: 'bg-white border border-neutral-200 hover:border-primary-500 text-primary-500'
 										}`}
 									>
 										{copied ? (
@@ -493,7 +531,7 @@ export default function PresentesPage() {
 					newQty,
 					totalNeeded,
 					actualAvailable,
-					canAdd: actualAvailable >= totalNeeded
+					canAdd: actualAvailable >= totalNeeded,
 				});
 
 				if (actualAvailable >= totalNeeded) {
@@ -591,7 +629,9 @@ export default function PresentesPage() {
 						<button
 							onClick={() => setSelectedCategory(null)}
 							className={`px-5 py-2 text-sm font-medium tracking-wider transition-colors ${
-								selectedCategory === null ? 'bg-primary-500 text-cream-100' : 'bg-white border border-neutral-200 text-primary-500 hover:border-primary-500'
+								selectedCategory === null
+									? 'bg-primary-500 text-cream-100'
+									: 'bg-white border border-neutral-200 text-primary-500 hover:border-primary-500'
 							}`}
 						>
 							Todos
@@ -601,7 +641,9 @@ export default function PresentesPage() {
 								key={category.id}
 								onClick={() => setSelectedCategory(category.id)}
 								className={`px-5 py-2 text-sm font-medium tracking-wider transition-colors ${
-									selectedCategory === category.id ? 'bg-primary-500 text-cream-100' : 'bg-white border border-neutral-200 text-primary-500 hover:border-primary-500'
+									selectedCategory === category.id
+										? 'bg-primary-500 text-cream-100'
+										: 'bg-white border border-neutral-200 text-primary-500 hover:border-primary-500'
 								}`}
 							>
 								{category.icon} {category.name}

@@ -8,8 +8,8 @@ export const WeddingInfo = () => {
 			content: (
 				<div>
 					<p className="font-medium text-lg mb-3">25 de Julho de 2026</p>
-					<p className="text-neutral-600">Cerimônia: 16h00</p>
-					<p className="text-neutral-600">Recepção: 18h00</p>
+					<p className="text-neutral-600">Cerimônia: 16h30</p>
+					<p className="text-neutral-600">Após a cerimonia, teremos a recepção no mesmo local</p>
 				</div>
 			),
 		},
@@ -47,7 +47,7 @@ export const WeddingInfo = () => {
 							<span className="font-medium text-primary-500">Homens:</span> Traje social (terno ou camisa social com calça)
 						</p>
 						<p>
-							<span className="font-medium text-primary-500">Mulheres:</span> Vestido (Mid ou long) ou conjunto elegante
+							<span className="font-medium text-primary-500">Mulheres:</span> Vestido (Mid ou longo) ou conjunto elegante
 						</p>
 					</div>
 				</div>
