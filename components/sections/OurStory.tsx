@@ -107,6 +107,7 @@ const storySections: StorySection[] = [
 		images: [
 			'/images/hero/divos.jpeg',
 			'/images/hero/alianças.jpeg',
+			'/images/hero/bateria.jpeg',
 			'/images/hero/bebendo.jpeg',
 			'/images/hero/cafezinho.jpeg',
 			'/images/hero/emo.jpeg',
