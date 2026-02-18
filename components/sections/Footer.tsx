@@ -20,6 +20,8 @@ export const Footer = () => {
 
 	const quickLinks = [
 		{ name: 'Início', href: '#home' },
+		{ name: 'Informações', href: '#info' },
+		{ name: 'Nossa História', href: '#story' },
 		{ name: 'Confirmar Presença', href: '#rsvp' },
 		{ name: 'Presentes', href: '#gifts' },
 		{ name: 'Galeria', href: '#gallery' },
@@ -62,39 +64,6 @@ export const Footer = () => {
 								</li>
 							))}
 						</ul>
-					</div>
-
-					{/* Contact and Social */}
-					<div className="text-center md:text-right">
-						<div className="flex justify-center md:justify-end space-x-4 mb-6">
-							{socialLinks.map((social) => {
-								const Icon = social.icon;
-								return (
-									<a
-										key={social.label}
-										href={social.href}
-										rel="noopener noreferrer"
-										className="w-10 h-10 border border-cream-400 flex items-center justify-center text-cream-300 hover:text-cream-100 hover:border-cream-100 transition-all duration-300"
-										title={social.label}
-									>
-										<Icon className="w-5 h-5" />
-									</a>
-								);
-							})}
-						</div>
-						<div className="text-cream-300 text-sm space-y-1">
-							<p>{process.env.NEXT_PUBLIC_EMAIL || 'email@example.com'}</p>
-							<p>
-								<a
-									href={`https://wa.me/${whatsappNumber}`}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="hover:text-cream-100 transition-colors"
-								>
-									+{whatsappNumber}
-								</a>
-							</p>
-						</div>
 					</div>
 				</div>
 

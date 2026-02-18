@@ -3,16 +3,19 @@
 ## What Was Implemented
 
 ### 1. Real PIX QR Code Generation
+
 - Generates dynamic PIX QR codes for each order
 - Includes order number in PIX message for easy tracking
 - Uses your phone number as PIX key: `+5562994776888`
 
 ### 2. Order Management System
+
 - Orders saved to Supabase database
 - Admin panel to view and confirm payments
 - Automatic gift reservation when order is created
 
 ### 3. Payment Flow
+
 1. Guest adds gifts to cart
 2. Guest fills in their info (name, email, phone)
 3. System generates unique PIX QR code + copy-paste code
@@ -83,6 +86,7 @@ npm run dev
 ### Step 4: Check Admin Panel
 
 Go to: http://localhost:3000/admin/orders
+
 - Password: `R@fael2026!`
 - View all pending orders
 - Confirm payments after seeing them in Nubank
@@ -130,10 +134,12 @@ Go to: http://localhost:3000/admin/orders
 ✅ **Simple** - Manual confirmation (acceptable for weddings)
 
 ⚠️ **Current Limitations:**
+
 - Admin password in environment variable (basic security)
 - Manual confirmation required (not fully automatic)
 
 For better security later (optional):
+
 - Move to JWT-based admin auth
 - Add email notifications
 - Integrate Nubank API for automatic confirmation (requires business account)
@@ -145,6 +151,7 @@ For better security later (optional):
 Access: http://localhost:3000/admin/orders
 
 Features:
+
 - ✅ View all orders (pending/confirmed)
 - ✅ Filter by status
 - ✅ See buyer details
@@ -170,16 +177,19 @@ NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=eyJhbGci...
 ## Troubleshooting
 
 **QR Code not appearing?**
+
 - Check browser console for errors
 - Verify API route is accessible: http://localhost:3000/api/orders/create
 - Make sure `pix-utils` and `qrcode` packages are installed
 
 **Can't confirm orders?**
+
 - Check admin password matches `.env.local`
 - Verify orders table exists in Supabase
 - Check browser network tab for API errors
 
 **PIX code invalid?**
+
 - Verify phone number format: `+5562994776888`
 - Test copying the PIX code in your bank app
 
@@ -188,6 +198,7 @@ NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=eyJhbGci...
 ## Next Improvements (Optional)
 
 After this works:
+
 1. **Email Notifications** - Send confirmation emails
 2. **WhatsApp Notifications** - Alert you on new orders
 3. **Upload Payment Proof** - Let guests upload screenshot

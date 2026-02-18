@@ -207,13 +207,15 @@ const PixModal = ({
 	const [copied, setCopied] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [pixData, setPixData] = useState<{ pixCode: string; qrCodeImage: string; orderNumber: string } | null>(null);
+	const pixKey = process.env.NEXT_PUBLIC_PIX_KEY;
 
 	const handleCopyPix = async () => {
-		if (!pixData) return;
+		const textToCopy = pixKey || pixData?.pixCode;
+		if (!textToCopy) return;
 
 		try {
 			if (navigator.clipboard && navigator.clipboard.writeText) {
-				await navigator.clipboard.writeText(pixData.pixCode);
+				await navigator.clipboard.writeText(textToCopy);
 				setCopied(true);
 				setTimeout(() => setCopied(false), 2000);
 			} else {
@@ -222,7 +224,7 @@ const PixModal = ({
 		} catch (err) {
 			// Fallback para navegadores antigos ou mobile
 			const textArea = document.createElement('textarea');
-			textArea.value = pixData.pixCode;
+			textArea.value = textToCopy;
 
 			// Evitar scroll e visibilidade
 			textArea.style.top = '0';
@@ -395,10 +397,10 @@ const PixModal = ({
 
 							{/* Chave PIX */}
 							<div className="mb-6">
-								<p className="text-sm text-neutral-600 mb-2">Ou copie o código PIX:</p>
+								<p className="text-sm text-neutral-600 mb-2">Ou copie a chave PIX:</p>
 								<div className="flex flex-col gap-2">
 									<div className="bg-white px-3 py-2 text-xs border border-neutral-200 font-mono break-all max-h-20 overflow-y-auto">
-										{pixData?.pixCode}
+										{pixKey || pixData?.pixCode}
 									</div>
 									<button
 										onClick={handleCopyPix}
@@ -414,7 +416,7 @@ const PixModal = ({
 											</>
 										) : (
 											<>
-												<Copy size={20} /> Copiar código
+												<Copy size={20} /> Copiar pix
 											</>
 										)}
 									</button>
