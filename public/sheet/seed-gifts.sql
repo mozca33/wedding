@@ -16,12 +16,17 @@ INSERT INTO gifts (category, name, price, quantity, image, reserved, sold) VALUE
 ('cozinha', 'Jogo de facas 10pçs', 100, 1, '/images/gifts/Jogo de Facas.png', 0, 0),
 ('cozinha', 'Escorredor de louça e talheres', 120, 1, '/images/gifts/escorredor de louça.png', 0, 0),
 ('cozinha', 'Frigideira Inox', 200, 2, '/images/gifts/frigideira inox.jpg', 0, 0),
-('cozinha', 'Kit Panelas 8pçs', 650, 1, '/images/gifts/kit panelas.png', 0, 0),
 ('cozinha', 'Kit Tábuas de corte 3pçs', 130, 1, '/images/gifts/tabuas de corte.jpg', 0, 0),
 ('cozinha', 'Kit Travessa/refratários 3pçs', 200, 4, '/images/gifts/travessas refratarias.jpg', 0, 0),
 ('cozinha', 'Sanduicheira', 120, 1, '/images/gifts/sanduicheira.png', 0, 0),
 ('cozinha', 'Air Fryer', 300, 1, '/images/gifts/airfryer.png', 0, 0),
-('cozinha', 'Forno', 500, 1, '/images/gifts/forno.png', 0, 0),
+('cozinha', 'Conjunto Panelas de Cerâmica - Ceraflame', 900, 1, '/images/gifts/panela-ceramica.jpeg', 0, 0),
+('cozinha', 'Risoteira de Cerâmica - Ceraflame', 530, 1, '/images/gifts/risoteira.jpeg', 0, 0),
+('cozinha', 'Caçarola Alta de Cerâmica - Ceraflame', 300, 1, '/images/gifts/cacarola.jpeg', 0, 0),
+('cozinha', 'Forno a Gás', 1000, 1, '/images/gifts/forno.jpeg', 0, 0),
+('cozinha', 'Espagueteira', 300, 1, '/images/gifts/espagueteira.jpeg', 0, 0),
+('cozinha', 'Bifeteira de Ferro Fundido', 100, 1, '/images/gifts/bifeteira.jpeg', 0, 0),
+('cozinha', 'Panela de Fazer Pão', 270, 1, '/images/gifts/panela-pao.jpeg', 0, 0),
 ('cozinha', 'Batedeira', 450, 1, '/images/gifts/batedeira.png', 0, 0),
 ('cozinha', 'Liquidificador', 180, 1, '/images/gifts/liquidificador.png', 0, 0),
 ('cozinha', 'Mixer', 100, 1, '/images/gifts/mixer 3 em 1.png', 0, 0),
@@ -45,4 +50,4 @@ INSERT INTO gifts (category, name, price, quantity, image, reserved, sold) VALUE
 ('cama-e-banho', 'Edredom de casal', 550, 2, '/images/gifts/edredom.png', 0, 0),
 ('cama-e-banho', 'Jogo de banho', 350, 4, '/images/gifts/jogo de banho.png', 0, 0);
 
--- Total: 31 items (Cozinha: 26, Limpeza: 2, Cama e Banho: 3)
+-- Total: 36 items (Cozinha: 31, Limpeza: 2, Cama e Banho: 3)
