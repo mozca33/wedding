@@ -8,17 +8,28 @@ export const useCart = () => {
 	const [items, setItems] = useState<CartItem[]>([]);
 	const [isLoaded, setIsLoaded] = useState(false);
 
-	// Carregar carrinho do localStorage
 	useEffect(() => {
-		const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-		if (savedCart) {
-			try {
-				setItems(JSON.parse(savedCart));
-			} catch {
-				console.error('Erro ao carregar carrinho');
+		const load = () => {
+			const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+			if (savedCart) {
+				try {
+					setItems(JSON.parse(savedCart));
+				} catch {
+					console.error('Erro ao carregar carrinho');
+				}
+			} else {
+				setItems([]);
 			}
-		}
+		};
+
+		load();
 		setIsLoaded(true);
+
+		const handleStorage = (e: StorageEvent) => {
+			if (e.key === CART_STORAGE_KEY) load();
+		};
+		window.addEventListener('storage', handleStorage);
+		return () => window.removeEventListener('storage', handleStorage);
 	}, []);
 
 	// Salvar carrinho no localStorage

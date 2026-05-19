@@ -30,6 +30,7 @@ export const fetchGifts = async (): Promise<Gift[]> => {
 		price: parseFloat(gift.price),
 		quantity: gift.quantity,
 		image: gift.image,
+		website: gift.website ?? undefined,
 		reserved: gift.reserved,
 		sold: gift.sold,
 	}));
@@ -55,6 +56,7 @@ export const fetchGiftsByCategory = async (category: GiftCategoryType): Promise<
 		price: parseFloat(gift.price),
 		quantity: gift.quantity,
 		image: gift.image,
+		website: gift.website ?? undefined,
 		reserved: gift.reserved,
 		sold: gift.sold,
 	}));
@@ -80,6 +82,7 @@ export const fetchGiftById = async (id: string): Promise<Gift | null> => {
 		price: parseFloat(data.price),
 		quantity: data.quantity,
 		image: data.image,
+		website: data.website ?? undefined,
 		reserved: data.reserved,
 		sold: data.sold,
 	};

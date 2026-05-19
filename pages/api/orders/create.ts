@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { createStaticPix } from 'pix-utils';
 import QRCode from 'qrcode';
 import { sendOrderNotifications } from '@/lib/notifications';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 const supabase = createClient(
 	process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,6 +25,13 @@ interface CreateOrderRequest {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
 	if (req.method !== 'POST') {
 		return res.status(405).json({ error: 'Method not allowed' });
+	}
+
+	const ip = getClientIp(req);
+	const limit = await checkRateLimit({ key: `order:${ip}`, max: 5, windowSeconds: 60 });
+	if (!limit.allowed) {
+		res.setHeader('Retry-After', String(limit.retryAfterSeconds));
+		return res.status(429).json({ error: 'Muitas tentativas. Aguarde um minuto e tente novamente.' });
 	}
 
 	try {

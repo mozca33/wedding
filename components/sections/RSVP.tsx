@@ -1,17 +1,25 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { Users, Calendar, MessageCircle } from 'lucide-react';
 import { useRSVP } from '@/hooks/useRSVP';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { RSVPData } from '@/lib/types';
 
-// Definir interface específica para o formulário
 interface RSVPFormData {
 	name: string;
 	phone?: string;
 	message?: string;
 }
+
+const formatPhone = (raw: string): string => {
+	const digits = raw.replace(/\D/g, '').slice(0, 11);
+	if (digits.length === 0) return '';
+	if (digits.length <= 2) return `(${digits}`;
+	if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+	if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+	return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+};
 
 export const RSVP = () => {
 	const { loading, rsvpList, submitRSVP, fetchRSVPList } = useRSVP();
@@ -20,6 +28,7 @@ export const RSVP = () => {
 		register,
 		handleSubmit,
 		reset,
+		control,
 		formState: { errors },
 	} = useForm<RSVPFormData>();
 
@@ -62,7 +71,30 @@ export const RSVP = () => {
 
 							<Input label="Nome Completo *" {...register('name', { required: 'Nome é obrigatório' })} error={errors.name?.message} />
 
-							<Input label="Telefone" type="tel" {...register('phone')} />
+							<Controller
+								name="phone"
+								control={control}
+								rules={{
+									validate: (value) => {
+										if (!value) return true;
+										const digits = value.replace(/\D/g, '');
+										if (digits.length === 0) return true;
+										return (digits.length === 10 || digits.length === 11) || 'Telefone incompleto';
+									},
+								}}
+								render={({ field }) => (
+									<Input
+										label="Telefone"
+										type="tel"
+										inputMode="numeric"
+										placeholder="(00) 00000-0000"
+										value={field.value || ''}
+										onChange={(e) => field.onChange(formatPhone(e.target.value))}
+										onBlur={field.onBlur}
+										error={errors.phone?.message}
+									/>
+								)}
+							/>
 
 							<div>
 								<label className="block text-sm font-medium text-neutral-700 mb-2">Mensagem para os Noivos (Opcional)</label>

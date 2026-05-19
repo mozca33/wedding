@@ -1,0 +1,24 @@
+{
+  "name": "Julia & Rafael — Nosso Casamento",
+  "short_name": "J & R",
+  "description": "Celebre com a gente esse dia especial!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f0e8",
+  "theme_color": "#1a1a1a",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/images/hero/capa.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/hero/capa.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}

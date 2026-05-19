@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
-import { ShoppingCart, Gift as GiftIcon, Plus, Minus, X, Check, Copy, RefreshCw } from 'lucide-react';
+import { ShoppingCart, Gift as GiftIcon, Plus, Minus, X, Check, Copy, RefreshCw, ExternalLink, CreditCard, ShoppingBag } from 'lucide-react';
 import { useGifts } from '@/hooks/useGifts';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/Button';
@@ -14,6 +14,14 @@ const formatPrice = (value: number): string => {
 		style: 'currency',
 		currency: 'BRL',
 	});
+};
+
+// Formata chave PIX de telefone BR para exibição
+const formatPixKey = (key?: string): string => {
+	if (!key) return '';
+	const match = key.match(/^\+?55(\d{2})(\d{5})(\d{4})$/);
+	if (match) return `+55 (${match[1]}) ${match[2]}-${match[3]}`;
+	return key;
 };
 
 // Componente do Card de Presente
@@ -61,8 +69,8 @@ const GiftCard = ({ gift, onAddToCart, availableQty }: { gift: Gift; onAddToCart
 				</div>
 
 				<Button onClick={() => onAddToCart(gift)} disabled={!isAvailable} className="mt-4 w-full sm:w-auto" size="sm">
-					<GiftIcon size={16} className="mr-2" />
-					Dar Presente
+					<ShoppingBag size={16} className="mr-2" />
+					Adicionar ao Carrinho
 				</Button>
 			</div>
 		</div>
@@ -175,7 +183,7 @@ const CartModal = ({
 						</div>
 						<Button onClick={onCheckout} className="w-full" size="lg">
 							<GiftIcon size={20} className="mr-2" />
-							Dar Presente
+							Finalizar Presente
 						</Button>
 					</div>
 				)}
@@ -184,12 +192,13 @@ const CartModal = ({
 	);
 };
 
-// Modal de Pagamento PIX
-const PixModal = ({
+// Modal de Checkout (PIX ou Site)
+const CheckoutModal = ({
 	isOpen,
 	onClose,
 	totalPrice,
 	cartItems,
+	gifts,
 	onConfirm,
 	onUpdateCart,
 }: {
@@ -197,17 +206,39 @@ const PixModal = ({
 	onClose: () => void;
 	totalPrice: number;
 	cartItems: CartItem[];
+	gifts: Gift[];
 	onConfirm: (buyerInfo: { name: string; email: string; phone?: string }) => void;
 	onUpdateCart: (giftId: string, newQty: number) => void;
 }) => {
-	const [step, setStep] = useState<'info' | 'pix'>('info');
+	const [step, setStep] = useState<'method' | 'info' | 'pix' | 'links'>('method');
+	const [paymentMethod, setPaymentMethod] = useState<'pix' | 'site' | null>(null);
 	const [buyerName, setBuyerName] = useState('');
 	const [buyerEmail, setBuyerEmail] = useState('');
 	const [buyerPhone, setBuyerPhone] = useState('');
 	const [copied, setCopied] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [pixData, setPixData] = useState<{ pixCode: string; qrCodeImage: string; orderNumber: string } | null>(null);
+	const [orderNumber, setOrderNumber] = useState<string | null>(null);
 	const pixKey = process.env.NEXT_PUBLIC_PIX_KEY;
+
+	// Reset when modal closes
+	useEffect(() => {
+		if (!isOpen) {
+			setStep('method');
+			setPaymentMethod(null);
+			setBuyerName('');
+			setBuyerEmail('');
+			setBuyerPhone('');
+			setCopied(false);
+			setPixData(null);
+			setOrderNumber(null);
+		}
+	}, [isOpen]);
+
+	const handleSelectMethod = (method: 'pix' | 'site') => {
+		setPaymentMethod(method);
+		setStep('info');
+	};
 
 	const handleCopyPix = async () => {
 		const textToCopy = pixKey || pixData?.pixCode;
@@ -221,126 +252,166 @@ const PixModal = ({
 			} else {
 				throw new Error('Clipboard API not available');
 			}
-		} catch (err) {
-			// Fallback para navegadores antigos ou mobile
+		} catch {
 			const textArea = document.createElement('textarea');
 			textArea.value = textToCopy;
-
-			// Evitar scroll e visibilidade
 			textArea.style.top = '0';
 			textArea.style.left = '0';
 			textArea.style.position = 'fixed';
 			textArea.style.opacity = '0';
-
 			document.body.appendChild(textArea);
 			textArea.focus();
 			textArea.select();
-
 			try {
 				const successful = document.execCommand('copy');
 				if (successful) {
 					setCopied(true);
 					setTimeout(() => setCopied(false), 2000);
 				}
-			} catch (fallbackErr) {
-				console.error('Fallback copy error', fallbackErr);
-			}
-
+			} catch { /* silent */ }
 			document.body.removeChild(textArea);
 		}
 	};
 
 	const handleSubmitInfo = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (buyerName && buyerEmail) {
-			setIsLoading(true);
-			try {
-				// Call API to create order and generate PIX
-				const response = await fetch('/api/orders/create', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						items: cartItems,
-						buyerName,
-						buyerEmail,
-						buyerPhone,
-					}),
-				});
+		if (!buyerName || !buyerEmail) return;
 
-				const data = await response.json();
+		setIsLoading(true);
+		try {
+			const response = await fetch('/api/orders/create', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					items: cartItems,
+					buyerName,
+					buyerEmail,
+					buyerPhone,
+				}),
+			});
 
-				if (data.success) {
+			const data = await response.json();
+
+			if (data.success) {
+				if (paymentMethod === 'pix') {
 					setPixData({
 						pixCode: data.order.pixCode,
 						qrCodeImage: data.order.qrCodeImage,
 						orderNumber: data.order.orderNumber,
 					});
 					setStep('pix');
-				} else if (response.status === 409 && data.availabilityIssues) {
-					// Handle availability issues - some items are no longer available
-					console.log('Availability issues:', data.availabilityIssues);
-
-					// Update cart quantities based on what's available
-					let message = 'Alguns itens não estão mais disponíveis:\n\n';
-					let hasChanges = false;
-
-					data.availabilityIssues.forEach((issue: any) => {
-						message += `• ${issue.name}: você tentou ${issue.requested}, mas só há ${issue.available} disponível(is)\n`;
-
-						// Update cart to available quantity
-						if (issue.available > 0) {
-							onUpdateCart(issue.giftId, issue.available);
-							hasChanges = true;
-						} else {
-							// Remove item if none available
-							onUpdateCart(issue.giftId, 0);
-							hasChanges = true;
-						}
-					});
-
-					message += '\nSeu carrinho foi atualizado. Por favor, revise e tente novamente.';
-
-					alert(message);
-
-					// Close modal so user can see updated cart
-					onClose();
 				} else {
-					alert(data.message || 'Erro ao criar pedido. Tente novamente.');
+					setOrderNumber(data.order.orderNumber);
+					setStep('links');
 				}
-			} catch (error) {
-				console.error('Error creating order:', error);
-				alert('Erro ao processar pagamento. Tente novamente.');
-			} finally {
-				setIsLoading(false);
+			} else if (response.status === 409 && data.availabilityIssues) {
+				let message = 'Alguns itens não estão mais disponíveis:\n\n';
+				data.availabilityIssues.forEach((issue: any) => {
+					message += `• ${issue.name}: você tentou ${issue.requested}, mas só há ${issue.available} disponível(is)\n`;
+					onUpdateCart(issue.giftId, issue.available > 0 ? issue.available : 0);
+				});
+				message += '\nSeu carrinho foi atualizado. Por favor, revise e tente novamente.';
+				alert(message);
+				onClose();
+			} else {
+				alert(data.message || 'Erro ao criar pedido. Tente novamente.');
 			}
+		} catch (error) {
+			console.error('Error creating order:', error);
+			alert('Erro ao processar. Tente novamente.');
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
 	const handleConfirmPayment = () => {
-		onConfirm({
-			name: buyerName,
-			email: buyerEmail,
-			phone: buyerPhone || undefined,
-		});
+		onConfirm({ name: buyerName, email: buyerEmail, phone: buyerPhone || undefined });
+	};
+
+	const stepTitle: Record<typeof step, string> = {
+		method: 'Como deseja presentear?',
+		info: 'Seus Dados',
+		pix: 'Pagamento PIX',
+		links: 'Comprar nos Sites',
 	};
 
 	if (!isOpen) return null;
 
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-			<div className="bg-cream-100 shadow-2xl w-full max-w-md border border-neutral-200">
+			<div className="bg-cream-100 shadow-2xl w-full max-w-md border border-neutral-200 max-h-[90vh] flex flex-col">
 				{/* Header */}
-				<div className="flex items-center justify-between p-5 border-b border-neutral-200">
-					<h2 className="text-lg font-medium text-primary-500 tracking-wide">{step === 'info' ? 'Seus Dados' : 'Pagamento PIX'}</h2>
+				<div className="flex items-center justify-between p-5 border-b border-neutral-200 flex-shrink-0">
+					<div className="flex items-center gap-3">
+						{step !== 'method' && step !== 'links' && step !== 'pix' && (
+							<button
+								onClick={() => setStep('method')}
+								className="text-sm text-neutral-500 hover:text-primary-500 transition-colors"
+							>
+								← Voltar
+							</button>
+						)}
+						<h2 className="text-lg font-medium text-primary-500 tracking-wide">{stepTitle[step]}</h2>
+					</div>
 					<button onClick={onClose} className="p-2 hover:bg-cream-200 transition-colors">
 						<X size={24} className="text-primary-500" />
 					</button>
 				</div>
 
 				{/* Content */}
-				<div className="p-6">
-					{step === 'info' ? (
+				<div className="p-6 overflow-y-auto flex-1">
+
+					{/* STEP: Escolha do método */}
+					{step === 'method' && (
+						<div className="space-y-4">
+							<p className="text-sm text-neutral-600 text-center mb-6">
+								Escolha como você prefere presentear Julia & Rafael
+							</p>
+
+							<button
+								onClick={() => handleSelectMethod('pix')}
+								className="w-full p-5 bg-white border-2 border-neutral-200 hover:border-primary-500 transition-all text-left group"
+							>
+								<div className="flex items-start gap-4">
+									<div className="w-10 h-10 border border-primary-500 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-500 transition-colors">
+										<CreditCard size={20} className="text-primary-500 group-hover:text-cream-100 transition-colors" />
+									</div>
+									<div>
+										<p className="font-medium text-primary-500 mb-1 tracking-wide">Pagar via PIX</p>
+										<p className="text-sm text-neutral-500 leading-relaxed">
+											Receba a chave PIX e o QR Code para realizar o pagamento. Os noivos confirmarão o recebimento.
+										</p>
+									</div>
+								</div>
+							</button>
+
+							<button
+								onClick={() => handleSelectMethod('site')}
+								className="w-full p-5 bg-white border-2 border-neutral-200 hover:border-primary-500 transition-all text-left group"
+							>
+								<div className="flex items-start gap-4">
+									<div className="w-10 h-10 border border-primary-500 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-500 transition-colors">
+										<ExternalLink size={20} className="text-primary-500 group-hover:text-cream-100 transition-colors" />
+									</div>
+									<div>
+										<p className="font-medium text-primary-500 mb-1 tracking-wide">Comprar pelo site</p>
+										<p className="text-sm text-neutral-500 leading-relaxed">
+											Acesse os links dos produtos sugeridos e realize a compra diretamente no site da loja.
+										</p>
+									</div>
+								</div>
+							</button>
+						</div>
+					)}
+
+					{/* STEP: Dados do comprador */}
+					{step === 'info' && (
 						<form onSubmit={handleSubmitInfo} className="space-y-5">
+							<p className="text-sm text-neutral-500 mb-4">
+								{paymentMethod === 'pix'
+									? 'Preencha seus dados para gerarmos o PIX. O pedido ficará registrado para confirmação dos noivos.'
+									: 'Preencha seus dados para registrarmos sua intenção de presente. Em seguida enviaremos os links para compra.'}
+							</p>
 							<div>
 								<label className="block text-sm font-medium text-neutral-700 mb-2 tracking-wide">Seu Nome *</label>
 								<input
@@ -377,10 +448,15 @@ const PixModal = ({
 								/>
 							</div>
 							<Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-								{isLoading ? 'Gerando PIX...' : 'Continuar'}
+								{isLoading
+									? paymentMethod === 'pix' ? 'Gerando PIX...' : 'Registrando pedido...'
+									: 'Continuar'}
 							</Button>
 						</form>
-					) : (
+					)}
+
+					{/* STEP: PIX */}
+					{step === 'pix' && (
 						<div className="text-center">
 							<div className="mb-4">
 								<p className="text-sm text-neutral-600 mb-1">Pedido: {pixData?.orderNumber}</p>
@@ -388,14 +464,12 @@ const PixModal = ({
 								<p className="text-3xl font-medium text-primary-500">{formatPrice(totalPrice)}</p>
 							</div>
 
-							{/* QR Code */}
 							{pixData?.qrCodeImage && (
 								<div className="bg-white p-4 mb-4 inline-block border border-neutral-200">
 									<Image src={pixData.qrCodeImage} alt="QR Code PIX" width={300} height={300} className="w-64 h-64" />
 								</div>
 							)}
 
-							{/* Chave PIX */}
 							<div className="mb-6">
 								<p className="text-sm text-neutral-600 mb-2">Ou copie a chave PIX:</p>
 								<div className="flex flex-col gap-2">
@@ -410,15 +484,7 @@ const PixModal = ({
 												: 'bg-white border border-neutral-200 hover:border-primary-500 text-primary-500'
 										}`}
 									>
-										{copied ? (
-											<>
-												<Check size={20} /> Copiado!
-											</>
-										) : (
-											<>
-												<Copy size={20} /> Copiar pix
-											</>
-										)}
+										{copied ? <><Check size={20} /> Copiado!</> : <><Copy size={20} /> Copiar chave PIX</>}
 									</button>
 								</div>
 							</div>
@@ -428,7 +494,63 @@ const PixModal = ({
 								Já fiz o pagamento
 							</Button>
 
-							<p className="text-xs text-neutral-500 mt-4">Após confirmar, aguarde a validação do pagamento pelos noivos.</p>
+							<p className="text-xs text-neutral-500 mt-4 leading-relaxed">
+								Após o pagamento, os noivos confirmarão o recebimento e o presente ficará marcado como entregue.
+							</p>
+						</div>
+					)}
+
+					{/* STEP: Links dos sites */}
+					{step === 'links' && (
+						<div>
+							<div className="bg-primary-500/5 border border-primary-500/20 p-4 mb-6 text-center">
+								<p className="text-sm text-neutral-600">Pedido registrado: <span className="font-medium text-primary-500">{orderNumber}</span></p>
+								<p className="text-xs text-neutral-500 mt-1">Os noivos foram notificados da sua intenção de presente.</p>
+							</div>
+
+							<p className="text-sm text-neutral-600 mb-4 leading-relaxed">
+								Acesse os links abaixo para comprar cada presente no site sugerido. Após a compra, informe os noivos para confirmar o presente.
+							</p>
+
+							<div className="space-y-3">
+								{cartItems.map((item) => {
+									const gift = gifts.find((g) => g.id === item.giftId);
+									return (
+										<div key={item.giftId} className="flex items-center gap-3 p-3 bg-white border border-neutral-200">
+											<div className="relative w-12 h-12 flex-shrink-0">
+												<Image src={item.image} alt={item.name} fill className="object-contain" sizes="48px" />
+											</div>
+											<div className="flex-1 min-w-0">
+												<p className="text-sm font-medium text-primary-500 truncate">{item.name}</p>
+												<p className="text-xs text-neutral-500">{item.quantity}x · {formatPrice(item.price * item.quantity)}</p>
+											</div>
+											{gift?.website ? (
+												<a
+													href={gift.website}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="flex-shrink-0 inline-flex items-center gap-1 px-3 py-2 text-xs bg-primary-500 text-cream-100 hover:bg-primary-600 transition-colors"
+												>
+													<ExternalLink size={12} />
+													Comprar
+												</a>
+											) : (
+												<span className="flex-shrink-0 text-xs text-neutral-400 px-2">Sem link</span>
+											)}
+										</div>
+									);
+								})}
+							</div>
+
+							<div className="mt-6 bg-white border border-neutral-200 p-4 text-center">
+								<p className="text-xs text-neutral-600 mb-1">Prefere pagar via PIX?</p>
+								<p className="text-sm font-medium text-primary-500 font-mono select-all break-all">{pixKey}</p>
+							</div>
+
+							<Button onClick={handleConfirmPayment} className="w-full mt-5" size="lg">
+								<Check size={20} className="mr-2" />
+								Concluir
+							</Button>
 						</div>
 					)}
 				</div>
@@ -439,135 +561,105 @@ const PixModal = ({
 
 // Página Principal de Presentes
 export default function PresentesPage() {
-	const { gifts, categories, isLoaded, reserveGift, releaseReservation, getAvailableQuantity, getGiftsByCategory, refreshGifts } = useGifts();
+	const { gifts, categories, isLoaded, getAvailableQuantity, getGiftsByCategory, refreshGifts } = useGifts();
 
 	const { items: cartItems, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice } = useCart();
 
 	const [isCartOpen, setIsCartOpen] = useState(false);
-	const [isPixOpen, setIsPixOpen] = useState(false);
+	const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 	const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 	const [isAddingToCart, setIsAddingToCart] = useState(false);
 	const [isUpdatingQuantity, setIsUpdatingQuantity] = useState<string | null>(null);
+	const [pixBannerCopied, setPixBannerCopied] = useState(false);
 
-	// Auto-refresh when page becomes visible (e.g., returning from admin panel)
+	const handleCopyPixBanner = async () => {
+		const key = process.env.NEXT_PUBLIC_PIX_KEY;
+		if (!key) return;
+		try {
+			await navigator.clipboard.writeText(key);
+			setPixBannerCopied(true);
+			setTimeout(() => setPixBannerCopied(false), 2000);
+		} catch {
+			const ta = document.createElement('textarea');
+			ta.value = key;
+			ta.style.position = 'fixed';
+			ta.style.opacity = '0';
+			document.body.appendChild(ta);
+			ta.select();
+			try {
+				document.execCommand('copy');
+				setPixBannerCopied(true);
+				setTimeout(() => setPixBannerCopied(false), 2000);
+			} catch {
+				/* silent */
+			}
+			document.body.removeChild(ta);
+		}
+	};
+
+	// Auto-refresh when page becomes visible
 	useEffect(() => {
 		const handleVisibilityChange = () => {
-			if (!document.hidden) {
-				console.log('Page visible again, refreshing gifts...');
-				refreshGifts();
-			}
+			if (!document.hidden) refreshGifts();
 		};
-
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 		return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
 	}, [refreshGifts]);
 
 	const handleAddToCart = async (gift: Gift) => {
-		// Prevent race condition by locking
 		if (isAddingToCart) return;
-
 		setIsAddingToCart(true);
-
 		try {
-			const available = getAvailableQuantity(gift.id);
+			const inCart = cartItems.find((i) => i.giftId === gift.id)?.quantity ?? 0;
+			const available = getAvailableQuantity(gift.id) - inCart;
 			if (available > 0) {
-				// Just add to local cart (no database reservation yet)
-				// Reservation happens when order is created
-				addItem({
-					giftId: gift.id,
-					name: gift.name,
-					price: gift.price,
-					image: gift.image,
-				});
+				addItem({ giftId: gift.id, name: gift.name, price: gift.price, image: gift.image });
 			} else {
 				alert('Este presente não está mais disponível.');
 			}
 		} finally {
-			// Release lock after a short delay
 			setTimeout(() => setIsAddingToCart(false), 300);
 		}
 	};
 
 	const handleRemoveFromCart = (giftId: string) => {
-		// Just remove from local cart (no database update needed)
 		removeItem(giftId);
 	};
 
 	const handleUpdateCartQuantity = async (giftId: string, newQty: number) => {
-		// Prevent race condition by locking this specific gift
-		if (isUpdatingQuantity === giftId) {
-			console.log('Update already in progress for gift', giftId);
-			return;
-		}
-
+		if (isUpdatingQuantity === giftId) return;
 		setIsUpdatingQuantity(giftId);
-
 		try {
 			const item = cartItems.find((i) => i.giftId === giftId);
 			if (!item) return;
-
-			console.log('Updating cart quantity:', { giftId, currentQty: item.quantity, newQty });
-
-			// Don't allow quantity less than 0
 			if (newQty < 0) return;
-
-			// If trying to decrease to 0, remove item instead
-			if (newQty === 0) {
-				handleRemoveFromCart(giftId);
-				return;
-			}
+			if (newQty === 0) { handleRemoveFromCart(giftId); return; }
 
 			const diff = newQty - item.quantity;
 			if (diff > 0) {
-				// Increasing quantity - just check if available
 				const gift = gifts.find((g) => g.id === giftId);
-				const available = getAvailableQuantity(giftId);
-
-				// Account for items already in cart
-				const totalNeeded = newQty;
 				const actualAvailable = gift ? gift.quantity - gift.reserved - gift.sold : 0;
-
-				console.log('Trying to increase:', {
-					diff,
-					currentInCart: item.quantity,
-					newQty,
-					totalNeeded,
-					actualAvailable,
-					canAdd: actualAvailable >= totalNeeded,
-				});
-
-				if (actualAvailable >= totalNeeded) {
-					// Just update local cart (no database reservation)
+				if (actualAvailable >= newQty) {
 					updateQuantity(giftId, newQty);
-					console.log('✅ Quantity increased in cart');
 				} else {
-					console.log('❌ Not enough available. Alert user.');
 					alert(`Apenas ${actualAvailable} unidade(s) disponível(is).`);
 				}
 			} else if (diff < 0) {
-				// Decreasing quantity - just update local cart
-				console.log('Decreasing quantity by', Math.abs(diff));
 				updateQuantity(giftId, newQty);
-				console.log('✅ Quantity decreased in cart');
 			}
 		} finally {
-			// Release lock after a short delay
 			setTimeout(() => setIsUpdatingQuantity(null), 300);
 		}
 	};
 
 	const handleCheckout = () => {
 		setIsCartOpen(false);
-		setIsPixOpen(true);
+		setIsCheckoutOpen(true);
 	};
 
-	const handleConfirmPayment = (buyerInfo: { name: string; email: string; phone?: string }) => {
-		// Order is already saved in database via API
-		// Just clear cart and close modal
+	const handleConfirmPayment = () => {
 		clearCart();
-		setIsPixOpen(false);
-
-		alert('Pedido registrado! Aguarde a confirmação do pagamento pelos noivos. Você receberá um email de confirmação.');
+		setIsCheckoutOpen(false);
 	};
 
 	if (!isLoaded) {
@@ -597,19 +689,14 @@ export default function PresentesPage() {
 						</div>
 
 						<div className="flex items-center gap-2">
-							{/* Refresh Button */}
 							<button
-								onClick={() => {
-									console.log('Manual refresh triggered');
-									refreshGifts();
-								}}
+								onClick={() => refreshGifts()}
 								className="p-3 bg-white border border-neutral-200 text-primary-500 hover:border-primary-500 transition-colors"
 								title="Atualizar lista"
 							>
 								<RefreshCw size={22} />
 							</button>
 
-							{/* Carrinho */}
 							<button
 								onClick={() => setIsCartOpen(true)}
 								className="relative p-3 bg-primary-500 text-cream-100 hover:bg-primary-600 transition-colors"
@@ -625,13 +712,49 @@ export default function PresentesPage() {
 					</div>
 				</header>
 
-				{/* Filtros por Categoria */}
+				{/* Filtros + banner */}
 				<div className="container-custom py-8">
-					<div className="bg-white border border-primary-500 p-6 text-center mb-8 max-w-2xl mx-auto shadow-sm">
-						<p className="text-neutral-600 mb-2">Para presentear com qualquer valor, mandar para a chave pix:</p>
-						<p className="text-xl font-medium text-primary-500 font-mono select-all break-all">{process.env.NEXT_PUBLIC_PIX_KEY}</p>
+					{/* Como presentear — card unificado */}
+					<div className="bg-white border border-primary-500 max-w-2xl mx-auto mb-8 shadow-sm">
+						<div className="p-6 text-center">
+							<p className="text-neutral-600 leading-relaxed">
+								Adicione um presente ao carrinho e pague via PIX ou pelo site sugerido.
+							</p>
+						</div>
+
+						<div className="relative border-t border-neutral-200 mx-6">
+							<span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-white px-3 text-xs tracking-[0.2em] text-neutral-500">OU</span>
+						</div>
+
+						<div className="p-6 text-center">
+							<p className="text-sm text-neutral-600 mb-3">Presenteie com qualquer valor via PIX:</p>
+							<div className="flex items-center justify-center gap-3 flex-wrap">
+								<span className="text-lg font-medium text-primary-500 font-mono select-all">
+									{formatPixKey(process.env.NEXT_PUBLIC_PIX_KEY)}
+								</span>
+								<button
+									onClick={handleCopyPixBanner}
+									className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm transition-colors border ${
+										pixBannerCopied
+											? 'bg-green-50 text-green-700 border-green-300'
+											: 'bg-white border-neutral-200 hover:border-primary-500 text-primary-500'
+									}`}
+								>
+									{pixBannerCopied ? (
+										<>
+											<Check size={14} /> Copiado
+										</>
+									) : (
+										<>
+											<Copy size={14} /> Copiar
+										</>
+									)}
+								</button>
+							</div>
+						</div>
 					</div>
 
+					{/* Categorias */}
 					<div className="flex flex-wrap gap-2 justify-center">
 						<button
 							onClick={() => setSelectedCategory(null)}
@@ -662,11 +785,9 @@ export default function PresentesPage() {
 				{/* Lista de Presentes */}
 				<main className="container-custom pb-16">
 					{selectedCategory === null ? (
-						// Mostrar por categoria
 						categories.map((category) => {
 							const categoryGifts = getGiftsByCategory(category.id);
 							if (categoryGifts.length === 0) return null;
-
 							return (
 								<section key={category.id} className="mb-12">
 									<h2 className="text-xl font-medium text-primary-500 mb-6 flex items-center gap-3 tracking-wide">
@@ -682,7 +803,6 @@ export default function PresentesPage() {
 							);
 						})
 					) : (
-						// Mostrar categoria selecionada
 						<div className="grid gap-4 md:grid-cols-2">
 							{displayedGifts.map((gift) => (
 								<GiftCard key={gift.id} gift={gift} onAddToCart={handleAddToCart} availableQty={getAvailableQuantity(gift.id)} />
@@ -703,11 +823,12 @@ export default function PresentesPage() {
 					getAvailableQuantity={getAvailableQuantity}
 				/>
 
-				<PixModal
-					isOpen={isPixOpen}
-					onClose={() => setIsPixOpen(false)}
+				<CheckoutModal
+					isOpen={isCheckoutOpen}
+					onClose={() => setIsCheckoutOpen(false)}
 					totalPrice={totalPrice}
 					cartItems={cartItems}
+					gifts={gifts}
 					onConfirm={handleConfirmPayment}
 					onUpdateCart={handleUpdateCartQuantity}
 				/>

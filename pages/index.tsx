@@ -16,6 +16,12 @@ export default function Home() {
         <meta name="description" content="Celebre com a gente esse dia especial! Confirme sua presença e compartilhe os momentos com a gente!" />
         <meta name="theme-color" content="#1a1a1a" />
         <link rel="canonical" href="https://wedding-site-pied-eta.vercel.app/" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/images/hero/capa.jpeg" />
+        <link rel="apple-touch-icon" href="/images/hero/capa.jpeg" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="J & R" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
         {/* Open Graph */}
         <meta property="og:type" content="website" />

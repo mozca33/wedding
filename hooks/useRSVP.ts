@@ -48,29 +48,21 @@ export const useRSVP = () => {
 		async (data: RSVPData) => {
 			setLoading(true);
 			try {
-				const { error }: { error: unknown } = await supabase.from('rsvp').insert({
-					name: data.name,
-					phone: data.phone,
-					message: data.message,
-					confirmed: true,
+				const res = await fetch('/api/rsvp/create', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ name: data.name, phone: data.phone, message: data.message }),
 				});
 
-				if (error) throw error;
+				if (res.status === 429) {
+					showNotification('Muitas tentativas. Aguarde um minuto e tente novamente.', 'error');
+					return { success: false, error: 'rate_limited' };
+				}
 
-				// Enviar notificação automática via WhatsApp (API)
-				try {
-					await fetch('/api/notify-whatsapp', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							name: data.name,
-							phone: data.phone,
-							message: data.message,
-						}),
-					});
-				} catch (notifyError: unknown) {
-					// Não bloqueia o RSVP se a notificação falhar
-					console.error('Erro ao enviar notificação WhatsApp:', notifyError);
+				const body = await res.json().catch(() => ({}));
+				if (!res.ok) {
+					showNotification(body.error || 'Erro ao confirmar presença.', 'error');
+					return { success: false, error: body.error };
 				}
 
 				showNotification('Presença confirmada com sucesso! 🎉', 'success');
