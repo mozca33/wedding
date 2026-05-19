@@ -62,12 +62,7 @@ export const RSVP = () => {
 
 							<Input label="Nome Completo *" {...register('name', { required: 'Nome é obrigatório' })} error={errors.name?.message} />
 
-							<Input
-								label="Telefone (responsável)"
-								type="tel"
-								placeholder="Para crianças, use o telefone do responsável"
-								{...register('phone')}
-							/>
+							<Input label="Telefone" type="tel" {...register('phone')} />
 
 							<div>
 								<label className="block text-sm font-medium text-neutral-700 mb-2">Mensagem para os Noivos (Opcional)</label>
