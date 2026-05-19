@@ -77,53 +77,49 @@ export const GuestMessages = () => {
 						<p className="text-neutral-600 italic">Ainda não há mensagens. Seja o primeiro a deixar uma no formulário de confirmação!</p>
 					</div>
 				) : (
-				<div className="max-w-2xl mx-auto">
-					{/* Card */}
+				<div className="relative max-w-3xl mx-auto px-12 md:px-16">
+					{/* Card — altura fixa para não empurrar o resto da página */}
 					<div
-						className="bg-cream-100 border border-neutral-200 p-8 md:p-10 text-center flex flex-col"
+						className="bg-cream-100 border border-neutral-200 p-8 md:p-10 text-center flex flex-col justify-center h-[420px] md:h-[380px]"
 						style={{
 							opacity: visible ? 1 : 0,
 							transform: visible ? 'translateY(0)' : 'translateY(12px)',
 							transition: 'opacity 350ms ease, transform 350ms ease',
 						}}
 					>
-						{/* Quote mark */}
-						<span className="block font-script text-5xl text-primary-500/20 leading-none mb-2 select-none">"</span>
+						<span className="block font-script text-5xl text-primary-500/20 leading-none mb-2 select-none flex-shrink-0">"</span>
 
-						<div className="px-2">
+						<div className="flex-1 overflow-y-auto px-2 min-h-0 flex items-center justify-center">
 							<p className="text-neutral-700 text-lg leading-relaxed italic whitespace-pre-line">{msg.message}</p>
 						</div>
 
-						<div className="flex items-center justify-center gap-3 mt-8">
+						<div className="flex items-center justify-center gap-3 mt-6 flex-shrink-0">
 							<div className="w-8 h-px bg-primary-500" />
 							<p className="text-primary-500 font-medium tracking-wider uppercase">{msg.name}</p>
 							<div className="w-8 h-px bg-primary-500" />
 						</div>
 					</div>
 
-					{/* Arrows + Counter */}
 					{messages.length > 1 && (
-						<div className="flex items-center justify-center gap-6 mt-6">
+						<>
 							<button
 								onClick={() => goTo((current - 1 + messages.length) % messages.length)}
-								className="w-10 h-10 flex items-center justify-center border border-neutral-300 text-primary-500 hover:border-primary-500 hover:bg-primary-500 hover:text-cream-100 transition-all duration-200"
+								className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white border border-neutral-300 text-primary-500 hover:border-primary-500 hover:bg-primary-500 hover:text-cream-100 transition-all duration-200 shadow-sm"
 								aria-label="Mensagem anterior"
 							>
 								<ChevronLeft size={18} />
 							</button>
-
-							<p className="text-sm tracking-[0.2em] text-neutral-500 tabular-nums">
-								{String(current + 1).padStart(2, '0')} / {String(messages.length).padStart(2, '0')}
-							</p>
-
 							<button
 								onClick={() => goTo((current + 1) % messages.length)}
-								className="w-10 h-10 flex items-center justify-center border border-neutral-300 text-primary-500 hover:border-primary-500 hover:bg-primary-500 hover:text-cream-100 transition-all duration-200"
+								className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white border border-neutral-300 text-primary-500 hover:border-primary-500 hover:bg-primary-500 hover:text-cream-100 transition-all duration-200 shadow-sm"
 								aria-label="Próxima mensagem"
 							>
 								<ChevronRight size={18} />
 							</button>
-						</div>
+							<p className="text-center text-sm tracking-[0.2em] text-neutral-500 tabular-nums mt-6">
+								{String(current + 1).padStart(2, '0')} / {String(messages.length).padStart(2, '0')}
+							</p>
+						</>
 					)}
 				</div>
 				)}
