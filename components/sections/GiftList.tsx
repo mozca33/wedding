@@ -41,14 +41,6 @@ export const GiftList = () => {
 					</div>
 				</div>
 
-				{/* Mensagem especial */}
-				<div className="bg-white border border-neutral-200 text-center max-w-2xl mx-auto mt-8 p-8">
-					<p className="text-neutral-600 leading-relaxed italic">
-						"Não se sinta no dever de nos presentear. O mais importante é compartilhar esse momento especial com a gente. Cada gesto de carinho será
-						apreciado e guardado com muito amor."
-					</p>
-					<p className="text-primary-500 font-medium mt-6 tracking-wider">— Julia & Rafael</p>
-				</div>
 			</div>
 		</section>
 	);

@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router';
 import { Instagram, MessageSquare } from 'lucide-react';
 
 export const Footer = () => {
@@ -28,7 +29,13 @@ export const Footer = () => {
 		{ name: 'Contato', href: '#contact' },
 	];
 
+	const router = useRouter();
+
 	const scrollToSection = (href: string) => {
+		if (router.pathname !== '/') {
+			router.push(`/${href}`);
+			return;
+		}
 		const element = document.querySelector(href);
 		if (element) {
 			element.scrollIntoView({ behavior: 'smooth' });

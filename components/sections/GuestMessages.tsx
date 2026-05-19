@@ -61,8 +61,6 @@ export const GuestMessages = () => {
 		return () => clearInterval(timer);
 	}, [current, messages.length, goTo]);
 
-	if (messages.length === 0) return null;
-
 	const msg = messages[current];
 
 	return (
@@ -74,6 +72,11 @@ export const GuestMessages = () => {
 					<div className="w-24 h-px bg-primary-500 mx-auto" />
 				</div>
 
+				{messages.length === 0 ? (
+					<div className="max-w-2xl mx-auto bg-cream-100 border border-neutral-200 p-10 text-center">
+						<p className="text-neutral-600 italic">Ainda não há mensagens. Seja o primeiro a deixar uma no formulário de confirmação!</p>
+					</div>
+				) : (
 				<div className="max-w-2xl mx-auto">
 					{/* Card */}
 					<div
@@ -123,6 +126,7 @@ export const GuestMessages = () => {
 						</div>
 					)}
 				</div>
+				)}
 			</div>
 		</section>
 	);

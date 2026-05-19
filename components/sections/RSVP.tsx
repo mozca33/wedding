@@ -70,7 +70,7 @@ export const RSVP = () => {
 									{...register('message')}
 									rows={5}
 									className="textarea-field"
-									placeholder="Deixe uma mensagem carinhosa para nós — pode ser longa, vamos exibi-la na seção de mensagens"
+									placeholder="Deixe uma mensagem carinhosa para nós!"
 								/>
 							</div>
 
