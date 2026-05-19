@@ -1,7 +1,7 @@
 export interface RSVPData {
 	id?: string;
 	name: string;
-	email: string;
+	email?: string;
 	phone?: string;
 	message?: string;
 	confirmed?: boolean;
@@ -11,7 +11,7 @@ export interface RSVPData {
 export interface RSVPRow {
 	id: string;
 	name: string;
-	email: string;
+	email?: string;
 	phone?: string;
 	message?: string;
 	confirmed: boolean;
@@ -62,7 +62,7 @@ export interface RSVPRow {
 	id: string;
 	created_at: string;
 	name: string;
-	email: string;
+	email?: string;
 	phone?: string;
 	message?: string;
 	confirmed: boolean;
@@ -85,6 +85,7 @@ export interface Gift {
 	price: number;
 	quantity: number;
 	image: string;
+	website?: string; // link para comprar o presente
 	reserved: number; // quantidade reservada no carrinho (pendente)
 	sold: number; // quantidade vendida (confirmada)
 }

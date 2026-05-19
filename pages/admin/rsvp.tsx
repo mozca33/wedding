@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { Users, Mail, Phone, MessageSquare, Calendar } from 'lucide-react';
+import { Users, Phone, MessageSquare, Calendar } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { supabase } from '@/lib/supabase';
 
 interface RSVP {
 	id: string;
 	name: string;
-	email: string;
+	email?: string;
 	phone?: string;
 	message?: string;
 	confirmed: boolean;
@@ -159,7 +159,7 @@ export default function AdminRSVPPage() {
 							<thead className="bg-cream-50 border-b border-neutral-200">
 								<tr>
 									<th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 uppercase tracking-wider">Nome</th>
-									<th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 uppercase tracking-wider">Contato</th>
+									<th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 uppercase tracking-wider">Telefone</th>
 									<th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 uppercase tracking-wider">Mensagem</th>
 									<th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 uppercase tracking-wider">Data</th>
 									<th className="px-6 py-3 text-left text-xs font-medium text-neutral-600 uppercase tracking-wider">Status</th>
@@ -180,15 +180,13 @@ export default function AdminRSVPPage() {
 										</td>
 										<td className="px-6 py-4">
 											<div className="text-sm text-neutral-600 space-y-1">
-												<p className="flex items-center gap-1">
-													<Mail size={14} />
-													{rsvp.email}
-												</p>
-												{rsvp.phone && (
+												{rsvp.phone ? (
 													<p className="flex items-center gap-1">
 														<Phone size={14} />
 														{rsvp.phone}
 													</p>
+												) : (
+													<span className="text-sm text-neutral-400">Não informado</span>
 												)}
 											</div>
 										</td>

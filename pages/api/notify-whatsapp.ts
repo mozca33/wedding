@@ -3,7 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 
 interface RSVPNotification {
 	name: string;
-	email: string;
 	phone?: string;
 	message?: string;
 }
@@ -15,8 +14,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 	const data: RSVPNotification = req.body;
 
-	if (!data.name || !data.email) {
-		return res.status(400).json({ error: 'Nome e email são obrigatórios' });
+	if (!data.name) {
+		return res.status(400).json({ error: 'Nome é obrigatório' });
 	}
 
 	const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -76,7 +75,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 	const whatsappMessage = `🎉 *NOVA CONFIRMAÇÃO RSVP!*
 
 👤 **${data.name}**
-📧 ${data.email}
 📱 ${data.phone || 'Não informado'}
 ${data.message ? `💬 **Mensagem:**\n   "${data.message}"\n` : ''}
 ⏰ **Confirmado em:** ${new Date().toLocaleString('pt-BR')}

@@ -9,7 +9,6 @@ import { RSVPData } from '@/lib/types';
 // Definir interface específica para o formulário
 interface RSVPFormData {
 	name: string;
-	email: string;
 	phone?: string;
 	message?: string;
 }
@@ -47,7 +46,7 @@ export const RSVP = () => {
 					<h2 className="font-script text-4xl md:text-5xl text-primary-500 mb-4">Confirmar Presença</h2>
 					<div className="w-24 h-px bg-primary-500 mx-auto mb-6" />
 					<p className="text-neutral-600 max-w-2xl mx-auto">
-						Por favor, confirme sua presença até 1º de maio para que possamos nos organizar melhor.
+						Por favor, confirme sua presença até 25 de junho para que possamos nos organizar melhor.
 					</p>
 				</div>
 
@@ -65,19 +64,11 @@ export const RSVP = () => {
 							<Input label="Nome Completo *" {...register('name', { required: 'Nome é obrigatório' })} error={errors.name?.message} />
 
 							<Input
-								label="E-mail *"
-								type="email"
-								{...register('email', {
-									required: 'E-mail é obrigatório',
-									pattern: {
-										value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-										message: 'E-mail inválido',
-									},
-								})}
-								error={errors.email?.message}
+								label="Telefone (responsável)"
+								type="tel"
+								placeholder="Para crianças, use o telefone do responsável"
+								{...register('phone')}
 							/>
-
-							<Input label="Telefone" type="tel" {...register('phone')} />
 
 							<div>
 								<label className="block text-sm font-medium text-neutral-700 mb-2">Mensagem para os Noivos (Opcional)</label>

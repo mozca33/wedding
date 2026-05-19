@@ -31,7 +31,6 @@ export const useRSVP = () => {
 			const formattedData: RSVPData[] = (data as RSVPRow[]).map((item) => ({
 				id: item.id,
 				name: item.name,
-				email: item.email,
 				phone: item.phone || undefined,
 				message: item.message || undefined,
 				confirmed: item.confirmed,
@@ -49,29 +48,8 @@ export const useRSVP = () => {
 		async (data: RSVPData) => {
 			setLoading(true);
 			try {
-				// Verificar se já existe cadastro com mesmo email
-				const { data: existingByEmail } = await supabase.from('rsvp').select('id').eq('email', data.email).limit(1);
-
-				if (existingByEmail && existingByEmail.length > 0) {
-					showNotification('Este email já foi utilizado para confirmar presença.', 'error');
-					setLoading(false);
-					return { success: false, error: 'Email já cadastrado' };
-				}
-
-				// Verificar se já existe cadastro com mesmo telefone (se fornecido)
-				if (data.phone) {
-					const { data: existingByPhone } = await supabase.from('rsvp').select('id').eq('phone', data.phone).limit(1);
-
-					if (existingByPhone && existingByPhone.length > 0) {
-						showNotification('Este telefone já foi utilizado para confirmar presença.', 'error');
-						setLoading(false);
-						return { success: false, error: 'Telefone já cadastrado' };
-					}
-				}
-
 				const { error }: { error: unknown } = await supabase.from('rsvp').insert({
 					name: data.name,
-					email: data.email,
 					phone: data.phone,
 					message: data.message,
 					confirmed: true,
@@ -86,7 +64,6 @@ export const useRSVP = () => {
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({
 							name: data.name,
-							email: data.email,
 							phone: data.phone,
 							message: data.message,
 						}),

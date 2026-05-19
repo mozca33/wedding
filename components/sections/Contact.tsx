@@ -1,5 +1,5 @@
 // components/sections/Contact.tsx
-import { Mail, Phone, MapPin, Instagram } from 'lucide-react';
+import { Phone, MapPin, Instagram } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Image from 'next/image';
 
@@ -7,12 +7,6 @@ export const Contact = () => {
 	const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '';
 
 	const contactInfo = [
-		{
-			icon: Mail,
-			label: 'E-mail',
-			value: process.env.NEXT_PUBLIC_EMAIL || 'email@example.com',
-			href: `mailto:${process.env.NEXT_PUBLIC_EMAIL || 'email@example.com'}`,
-		},
 		{
 			icon: Phone,
 			label: 'Telefone',
