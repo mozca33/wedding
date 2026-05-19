@@ -209,8 +209,7 @@ export default function AdminOrdersPage() {
 	const fetchOrders = async () => {
 		setIsLoading(true);
 		try {
-			const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
-			const response = await fetch(`/api/orders/list?adminPassword=${adminPassword}`);
+			const response = await fetch('/api/orders/list', { credentials: 'include' });
 			const data = await response.json();
 
 			if (data.orders) {
@@ -233,11 +232,11 @@ export default function AdminOrdersPage() {
 		}
 
 		try {
-			const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 			const response = await fetch('/api/orders/confirm', {
 				method: 'POST',
+				credentials: 'include',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ orderId, adminPassword }),
+				body: JSON.stringify({ orderId }),
 			});
 
 			const data = await response.json();
@@ -262,11 +261,11 @@ export default function AdminOrdersPage() {
 		if (reason === null) return; // User cancelled
 
 		try {
-			const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 			const response = await fetch('/api/orders/reject', {
 				method: 'POST',
+				credentials: 'include',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ orderId, adminPassword, reason: reason || 'Rejeitado pelo administrador' }),
+				body: JSON.stringify({ orderId, reason: reason || 'Rejeitado pelo administrador' }),
 			});
 
 			const data = await response.json();

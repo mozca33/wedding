@@ -79,26 +79,28 @@ export const useAdminCheck = () => {
 		console.log('Admin status checked:', isAdmin);
 	};
 
-	const loginAsAdmin = (password: string): boolean => {
-		const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin123';
+	const loginAsAdmin = async (password: string): Promise<boolean> => {
+		try {
+			const res = await fetch('/api/admin/login', {
+				method: 'POST',
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ password }),
+			});
+			if (!res.ok) return false;
 
-		if (password === adminPassword) {
 			const session = {
 				isAdmin: true,
 				timestamp: new Date().toISOString(),
 			};
 			localStorage.setItem('wedding_admin_session', JSON.stringify(session));
 			setIsAdmin(true);
-
 			window.dispatchEvent(new Event('adminStatusChanged'));
-
-			setTimeout(() => {
-				window.dispatchEvent(new Event('adminStatusChanged'));
-			}, 100);
-
+			setTimeout(() => window.dispatchEvent(new Event('adminStatusChanged')), 100);
 			return true;
+		} catch {
+			return false;
 		}
-		return false;
 	};
 
 	const logoutAdmin = () => {

@@ -17,30 +17,21 @@ export const AdminLogin = ({ onClose, onSuccess }: AdminLoginProps) => {
   const { loginAsAdmin } = useAdminCheck()
   const { showNotification } = useNotification()
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
-    setTimeout(() => {
-      const success = loginAsAdmin(password)
-      if (success) {
-        showNotification('Login de admin realizado com sucesso! 🔐', 'success')
-        
-        if (onSuccess) {
-          onSuccess()
-        }
-        
-        onClose()
-        
-        setTimeout(() => {
-          window.location.reload()
-        }, 500)
-      } else {
-        showNotification('Senha incorreta. Tente novamente.', 'error')
-        setPassword('')
-      }
-      setLoading(false)
-    }, 1000)
+    const success = await loginAsAdmin(password)
+    if (success) {
+      showNotification('Login de admin realizado com sucesso! 🔐', 'success')
+      if (onSuccess) onSuccess()
+      onClose()
+      setTimeout(() => window.location.reload(), 500)
+    } else {
+      showNotification('Senha incorreta. Tente novamente.', 'error')
+      setPassword('')
+    }
+    setLoading(false)
   }
 
   return (
@@ -93,11 +84,6 @@ export const AdminLogin = ({ onClose, onSuccess }: AdminLoginProps) => {
           </div>
         </form>
 
-        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-600 text-center">
-            💡 <strong>Dica:</strong> A senha padrão é "admin123"
-          </p>
-        </div>
       </div>
     </div>
   )

@@ -1,97 +1,192 @@
-# CLAUDE.md — Wedding Website (Compacto)
+# CLAUDE.md — Wedding Website
 
-## 1) Objetivo
+## Stack
 
-Desenvolver e manter um website de casamento em Next.js com um pipeline de 5 agentes:
+- **Next.js** (Pages Router) + TypeScript
+- **Supabase** — banco de dados e realtime
+- **Tailwind CSS**
+- **Vercel** — deploy e cron jobs
+- **PIX** — pagamento manual via chave telefone
 
-- Arquitetura
-- Backend
-- Frontend
-- Code Review
-- Performance
+---
 
-## 2) Stack Base
+## Estrutura de pastas
 
-- Next.js (App Router) + TypeScript
-- next/font (Geist)
-- Testes: Jest/React Testing Library (unit) e Playwright (E2E) — quando solicitado
-- Deploy: Vercel
+```
+pages/
+├── index.tsx              # Página principal
+├── presentes.tsx          # Lista de presentes + carrinho + checkout
+├── admin/
+│   ├── index.tsx          # Dashboard admin
+│   ├── orders.tsx         # Gestão de pedidos
+│   └── rsvp.tsx           # Lista de RSVPs
+└── api/
+    ├── orders/
+    │   ├── create.ts      # Cria pedido + reserva presentes
+    │   ├── confirm.ts     # Aprova pedido (reserved → sold)
+    │   ├── reject.ts      # Rejeita pedido (libera reservas)
+    │   ├── list.ts        # Lista pedidos (admin)
+    │   └── cleanup.ts     # Cron: cancela pedidos > 7 dias
+    ├── notify-whatsapp.ts
+    └── test-whatsapp.ts
 
-## 3) Papéis (Agentes)
+components/
+├── AdminLayout.tsx
+├── CountDownTimer.tsx
+├── Layout.tsx
+├── sections/
+│   ├── Contact.tsx
+│   ├── Footer.tsx
+│   ├── Gallery.tsx
+│   ├── GiftList.tsx       # Seção de presentes na página principal
+│   ├── Header.tsx
+│   ├── Hero.tsx
+│   ├── OurStory.tsx
+│   ├── RSVP.tsx
+│   └── WeddingInfo.tsx
+└── ui/
+    ├── AdminLogin.tsx
+    ├── Button.tsx
+    ├── Input.tsx
+    ├── Modal.tsx
+    ├── MultiSelectActions.tsx
+    └── Notification.tsx
 
-- Arquitetura: definir estrutura de pastas, padrões, contratos de API, dados e integrações.
-- Backend: rotas (route.ts), handlers, validação, segurança, tipagem, mocks.
-- Frontend: páginas e componentes acessíveis, estados, integrações com APIs, responsividade.
-- Code Review: padronização, segurança, DX, consistência, sugestões objetivas.
-- Performance: Core Web Vitals, imagens, caching, bundle, métricas e ações de melhoria.
+lib/
+├── gifts-data.ts          # Funções de acesso ao Supabase (gifts)
+├── notifications.ts
+├── supabase.ts            # Cliente Supabase (anon key)
+├── supabaseAdmin.ts       # Cliente Supabase (service role)
+├── types.ts               # Interfaces TypeScript
+├── utils.ts
+└── whatsapp.ts
 
-## 4) Fluxo de Trabalho (curto)
+hooks/
+├── useAuth.ts
+├── useCart.ts             # Carrinho local (localStorage)
+├── useGallery.ts
+├── useGifts.ts            # Fetch de presentes do Supabase
+├── useNotification.ts
+└── useRSVP.ts
 
-1. Arquitetura: entregar plano curto (objetivos, módulos, APIs, pastas).
-2. Backend e Frontend: implementar incrementalmente conforme plano.
-3. Code Review: revisar diffs, apontar mudanças mínimas necessárias.
-4. Performance: medir, priorizar e aplicar otimizações rápidas.
-5. Repetir até atender critérios de aceite.
+public/
+├── images/
+│   ├── gifts/             # Imagens antigas dos presentes
+│   │   └── new/           # Imagens novas (abril/2026)
+│   ├── hero/
+│   └── story/
+└── sheet/                 # Scripts SQL de migração
+    ├── seed-gifts.sql
+    ├── update-gifts-v2.sql  # Atualiza imagens + adiciona website
+    └── ...
+```
 
-## 5) Formato de Resposta (sempre)
+---
 
-Entregue SEMPRE nesta ordem:
+## Modelo de dados
 
-1. Plano curto (bullets, até 10 linhas).
-2. Alterações como patch unified diff (quando alterar arquivos existentes).
-3. Arquivos novos completos (com caminho no cabeçalho).
-4. Comandos de uso/execução (npm/yarn/pnpm/bun).
-5. Checklist de aceite (marcado).
+### `gifts`
 
-Exemplo mínimo de diff:
---- a/app/page.tsx
-+++ b/app/page.tsx
-@@
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | UUID | Chave primária |
+| `name` | TEXT | Nome do presente |
+| `category` | TEXT | `cozinha`, `limpeza`, `cama-e-banho`, `para-a-vida-de-casados` |
+| `price` | DECIMAL | Preço em R$ |
+| `quantity` | INT | Quantidade total disponível |
+| `image` | TEXT | Caminho da imagem em `/public` |
+| `website` | TEXT | URL para comprar o presente (opcional) |
+| `reserved` | INT | Reservado em pedidos `pending` |
+| `sold` | INT | Vendido em pedidos `confirmed` |
 
-- export default function Page() { return <div>Old</div>; }
+### `gift_orders`
 
-* export default function Page() { return <main>New</main>; }
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | UUID | Chave primária |
+| `order_number` | TEXT | Ex: `WED-1234...` |
+| `buyer_name` | TEXT | Nome do convidado |
+| `buyer_email` | TEXT | E-mail do convidado |
+| `buyer_phone` | TEXT | Telefone (opcional) |
+| `items` | JSONB | Array de `{ giftId, name, price, quantity, image }` |
+| `total` | DECIMAL | Valor total |
+| `status` | TEXT | `pending`, `confirmed`, `cancelled` |
+| `pix_code` | TEXT | Código PIX gerado |
+| `notes` | TEXT | Observações (usado pelo cron de cancelamento) |
+| `created_at` | TIMESTAMPTZ | Data de criação |
+| `confirmed_at` | TIMESTAMPTZ | Data de confirmação |
 
-## 6) Critérios de Aceite
+---
 
-- Compila e roda: npm run dev | npm run build | npm run start
-- Acessibilidade básica (a11y): headings, labels, contraste, foco.
-- Performance: imagens otimizadas, import dinâmico quando útil, sem grandes regressões de bundle.
-- Segurança: validação de entrada, sem segredos em código, cabeçalhos/HTTP seguros nas rotas (quando aplicável).
-- Documentação mínima: README seção “Como rodar” + anotações de decisões no PR.
+## Fluxo de presentes
 
-## 7) Comandos Úteis
+1. Convidado adiciona ao carrinho (localStorage, sem banco)
+2. Clica "Finalizar Presente"
+3. Escolhe método: **PIX** ou **Comprar no site**
+4. Preenche nome + e-mail
+5. API cria pedido + reserva presentes
+6. **PIX:** exibe QR Code + chave
+7. **Site:** exibe links por produto
+8. Admin confirma ou rejeita no painel
 
-- Instalação: npm install
-- Dev: npm run dev (http://localhost:3000)
-- Build: npm run build
-- Testes (se configurado): npm test | npx playwright test
+---
 
-## 8) Convenções
+## Inventário
 
-- TypeScript estrito em novas peças.
-- Componentes: server quando possível; client só se necessário (use client).
-- CSS: preferir estilos do Next/Image e otimizações padrão; se usar lib de UI, justificar.
-- Mensagens de commit: curtas e claras; PRs pequenos com descrição do “porquê”.
+- Carrinho é 100% local — não toca o banco
+- Reserva acontece apenas na criação do pedido
+- Disponibilidade = `quantity - reserved - sold`
+- Ao adicionar ao carrinho, desconta o que já está no carrinho local
+- Pedidos `pending` > 7 dias são cancelados automaticamente pelo cron
 
-## 9) Estrutura Mínima
+---
 
-.
-├─ app/
-│ ├─ page.tsx
-│ └─ api/
-├─ components/
-├─ lib/
-├─ public/
-└─ README.md
+## Variáveis de ambiente obrigatórias
 
-## 10) Solicitação Típica (modelo)
+```env
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
+NEXT_PUBLIC_PIX_KEY
+NEXT_PUBLIC_PIX_NAME
+ADMIN_PASSWORD            # senha do painel admin (servidor; sem prefixo NEXT_PUBLIC)
+ADMIN_SESSION_SECRET      # (opcional) segredo HMAC para assinar o cookie de sessão admin
+CRON_SECRET
+```
 
-“Claude, implemente a página inicial e a rota de RSVP:
+---
 
-- Arquitetura: contratos de API e estrutura de pastas.
-- Backend: route.ts para POST /api/rsvp com validação.
-- Frontend: página /rsvp com formulário acessível.
-- Code Review: revisar diffs e apontar ajustes críticos.
-- Performance: otimizar imagens e evitar bundle desnecessário.
-  Responder no Formato de Resposta (Seção 5).”
+## Comandos
+
+```bash
+npm install          # Instalar dependências
+npm run dev          # http://localhost:3000
+npm run build        # Build de produção
+npx vercel --prod    # Deploy para produção
+```
+
+---
+
+## Deploy e cron
+
+O arquivo `vercel.json` configura o cron job de limpeza:
+
+```json
+{
+  "crons": [{ "path": "/api/orders/cleanup", "schedule": "0 8 * * *" }]
+}
+```
+
+Executa diariamente às 08:00 UTC. Protegido por `CRON_SECRET`.
+
+---
+
+## Documentação
+
+| Arquivo | Conteúdo |
+|---|---|
+| `README.md` | Visão geral e como rodar |
+| `ADMIN-PANEL.md` | Guia do painel administrativo |
+| `PIX-SETUP.md` | Fluxo de checkout e pagamento |
+| `INVENTORY-FIX.md` | Sistema de inventário e reservas |
+| `NOTIFICATIONS-SETUP.md` | Configuração de notificações |

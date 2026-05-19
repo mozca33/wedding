@@ -275,10 +275,7 @@ export default function AdminPage() {
 
 	const fetchStats = async () => {
 		try {
-			const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
-
-			// Fetch orders
-			const ordersRes = await fetch(`/api/orders/list?adminPassword=${adminPassword}`);
+			const ordersRes = await fetch('/api/orders/list', { credentials: 'include' });
 			const ordersData = await ordersRes.json();
 
 			if (ordersData.orders) {
@@ -308,13 +305,25 @@ export default function AdminPage() {
 		}
 	};
 
-	const handleLogin = (password: string) => {
-		if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
-			localStorage.setItem('admin-authenticated', 'true');
-			setIsAuthenticated(true);
-			fetchStats();
-		} else {
-			alert('Senha incorreta!');
+	const handleLogin = async (password: string) => {
+		try {
+			const res = await fetch('/api/admin/login', {
+				method: 'POST',
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ password }),
+			});
+			if (res.ok) {
+				localStorage.setItem('admin-authenticated', 'true');
+				setIsAuthenticated(true);
+				fetchStats();
+			} else {
+				const data = await res.json().catch(() => ({}));
+				alert(data.error || 'Senha incorreta!');
+			}
+		} catch (err) {
+			console.error(err);
+			alert('Erro ao fazer login.');
 		}
 	};
 

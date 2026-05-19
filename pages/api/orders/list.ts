@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
+import { requireAdmin } from '@/lib/adminAuth';
 
 const supabase = createClient(
 	process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,13 +12,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 		return res.status(405).json({ error: 'Method not allowed' });
 	}
 
-	try {
-		const { adminPassword } = req.query;
+	if (!requireAdmin(req, res)) return;
 
-		// Simple admin auth check
-		if (adminPassword !== process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
-			return res.status(401).json({ error: 'Unauthorized' });
-		}
+	try {
 
 		// Fetch all orders
 		const { data: orders, error } = await supabase
