@@ -42,7 +42,6 @@ export const RSVP = () => {
 		<section id="rsvp" className="section-padding bg-white">
 			<div className="container-custom">
 				<div className="text-center mb-16">
-					<p className="text-sm tracking-[0.3em] uppercase text-neutral-500 mb-4">RSVP</p>
 					<h2 className="font-script text-4xl md:text-5xl text-primary-500 mb-4">Confirmar Presença</h2>
 					<div className="w-24 h-px bg-primary-500 mx-auto mb-6" />
 					<p className="text-neutral-600 max-w-2xl mx-auto">
@@ -72,7 +71,12 @@ export const RSVP = () => {
 
 							<div>
 								<label className="block text-sm font-medium text-neutral-700 mb-2">Mensagem para os Noivos (Opcional)</label>
-								<textarea {...register('message')} className="textarea-field" placeholder="Deixe uma mensagem carinhosa para nós" />
+								<textarea
+									{...register('message')}
+									rows={5}
+									className="textarea-field"
+									placeholder="Deixe uma mensagem carinhosa para nós — pode ser longa, vamos exibi-la na seção de mensagens"
+								/>
 							</div>
 
 							<Button type="submit" loading={loading} className="w-full" size="lg">
